@@ -252,6 +252,17 @@ tr.win td{background:#F3ECDC;font-weight:900;}
 .bmem .bsk{color:var(--muted);}
 .bmem .bsk.risk{color:var(--r);font-weight:700;}
 
+/* ===== rules box (setup) ===== */
+.rules{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:11px 13px;margin-top:10px;}
+.rules h3{font-size:12px;font-weight:900;letter-spacing:.03em;margin:0 0 6px;display:flex;align-items:center;gap:6px;}
+.rules h3:not(:first-child){margin-top:11px;}
+.rules ol{margin:0;padding-left:18px;}
+.rules ul{margin:3px 0 0;padding-left:18px;}
+.rules li{font-size:12px;line-height:1.65;margin-bottom:2px;}
+.rules .k{font-weight:900;}
+.rules .song{font-size:12px;line-height:1.7;}
+.rules .axis-legend{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;}
+
 @media(max-width:560px){.mem{width:calc(50% - 4px);}.race-wrap{grid-template-columns:1fr;}.top-panels{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -898,6 +909,28 @@ function renderSetup(){
   return`<div class="kick">Band Audition</div>
     <h1><span class="a">Arpeggio</span></h1>
     <p class="note">練習でトークンを貯め、コストを払ってメンバーをスカウト。2曲のオーディションで競り勝つ。</p>
+
+    <div class="rules">
+      <h3><span class="dot bg-h"></span>遊び方</h3>
+      <ol>
+        <li>楽器を選んでバンドを結成。全 <span class="k">${CONFIG.turns}手番</span>のあいだ、毎手番つぎの<span class="k">どちらか1つ</span>を行います。</li>
+        <li><span class="k">練習</span>… <span class="r">縦(A)</span>か<span class="m">横(B)</span>のスタジオでトークンを <span class="k">+${CONFIG.practiceGain}</span>。そのぶんパワーが上がります。</li>
+        <li><span class="k">スカウト</span>… 貯めたトークンを払って場のメンバーを加入（最大 <span class="k">${CONFIG.bandCap}人</span>）。加入時に<span class="k">裏スキル</span>が公開されます。</li>
+      </ol>
+
+      <h3><span class="dot bg-r"></span>勝敗（${CONFIG.turns}手番後のオーディション）</h3>
+      <div class="song">2曲を披露し、各曲でパワーを競って<span class="k">順位点</span>を獲得します。</div>
+      <ul>
+        <li>1曲目（バラード）＝ <span class="h">高さ×${CONFIG.song1.h}</span> ＋ <span class="m">横×${CONFIG.song1.m}</span></li>
+        <li>2曲目（アップテンポ）＝ <span class="r">縦×${CONFIG.song2.r}</span> ＋ <span class="m">横×${CONFIG.song2.m}</span></li>
+      </ul>
+      <div class="song" style="margin-top:5px">順位点に<span class="k">審査員ボーナス</span>（2枚）を加え、<span class="k">合計点が最多のバンドが優勝</span>。同点なら横の高い方が勝ち。</div>
+
+      <div class="axis-legend">
+        <span class="r">■縦</span>=リズム（ベース・カホン）／<span class="m">■横</span>=メロディ（ボーカル・ギター）／<span class="h">■高さ</span>=ハーモニー（キーボード・楽器の種類）
+      </div>
+    </div>
+
     <h2><span class="dot bg-r"></span>人数</h2>
     <div class="row">${counts}</div>
     <div class="row" style="margin-top:14px">
