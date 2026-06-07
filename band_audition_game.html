@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バンド・オーディション</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF8F1; --card:#fff; --ink:#241D16; --muted:#7A6C5B; --line:#DDD3C0; --line2:#ECE4D4;
+  --r:#BE4A2C; --m:#2E7D6B; --h:#C2882A; --accent:#9A2C1E; --warn:#7A3000;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--ink);
+  background:radial-gradient(130% 90% at 50% -10%,#3a352f,#211e1b 70%);
+  min-height:100vh;padding:14px 10px 60px;font-size:14px;}
+.wrap{max-width:880px;margin:0 auto;}
+.sheet{background:var(--paper);border-radius:6px;padding:16px 16px 22px;
+  box-shadow:0 18px 50px rgba(0,0,0,.45);}
+h1{font-family:"RocknRoll One";font-size:26px;letter-spacing:.01em;line-height:1;}
+h1 .a{color:var(--accent);}
+.kick{font-size:9px;letter-spacing:.4em;color:var(--accent);font-weight:700;text-transform:uppercase;}
+h2{font-size:13px;font-weight:900;margin:14px 0 7px;letter-spacing:.03em;display:flex;align-items:center;gap:6px;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;}
+.r{color:var(--r);} .m{color:var(--m);} .h{color:var(--h);}
+.bg-r{background:var(--r);} .bg-m{background:var(--m);} .bg-h{background:var(--h);}
+.muted{color:var(--muted);}
+.row{display:flex;flex-wrap:wrap;gap:8px;}
+button{font-family:inherit;font-size:13px;cursor:pointer;border:1.5px solid var(--ink);
+  background:var(--card);color:var(--ink);border-radius:5px;padding:7px 12px;font-weight:700;
+  transition:.12s;}
+button:hover{background:var(--ink);color:var(--paper);}
+button:disabled{opacity:.32;cursor:not-allowed;}
+button.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
+button.ghost{border-style:dashed;font-weight:500;}
+button.big{padding:10px 18px;font-size:14px;}
+
+/* ===== member cards ===== */
+.mkt{display:flex;flex-wrap:wrap;gap:8px;}
+.mem{border:1.5px solid var(--line);background:var(--card);border-radius:6px;padding:7px 8px 22px;
+  width:130px;position:relative;cursor:default;transition:transform .12s,box-shadow .12s;}
+.mem.click{border-color:var(--ink);cursor:pointer;}
+.mem.click:hover{box-shadow:0 4px 0 var(--accent);transform:translateY(-2px);}
+.mem.res{outline:2px dashed var(--accent);outline-offset:1px;}
+.mem.snipe-target{border-color:var(--h);cursor:pointer;}
+.mem.snipe-target:hover{box-shadow:0 4px 0 var(--h);}
+.mem.new-synergy{border-color:var(--m);background:#f5fdf8;}
+.mem.risky-peeked{border-color:var(--r);background:#fff8f7;}
+.mem .mname{font-size:11.5px;font-weight:900;color:var(--ink);letter-spacing:.02em;margin-bottom:1px;}
+.mem .inst{font-size:12px;font-weight:700;color:var(--muted);}
+.mem .stats{font-size:11px;font-weight:700;margin:3px 0 4px;letter-spacing:.02em;}
+.mem .sk{font-size:10px;line-height:1.4;}
+.mem .sk b{font-weight:700;}
+.mem .closed{font-size:10px;color:var(--muted);}
+.mem .risk{color:var(--accent);font-weight:700;}
+.new-type{position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:900;
+  background:var(--m);color:#fff;border-radius:6px;padding:1px 5px;letter-spacing:.04em;}
+.detail-btn{position:absolute;bottom:5px;right:6px;font-size:10px;padding:1px 5px;
+  border-radius:8px;border-color:var(--line);color:var(--muted);font-weight:500;background:var(--paper);}
+.detail-btn:hover{background:var(--ink);color:var(--paper);}
+.peek{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 6px;border-radius:10px;}
+
+/* ===== band cards ===== */
+.band{border:1.5px solid var(--line);border-radius:6px;padding:9px 10px;margin-bottom:8px;background:var(--card);}
+.band.you{border-color:var(--accent);border-width:2px;}
+.band .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.band .nm{font-weight:900;}
+.band .lead{font-size:10.5px;color:var(--muted);}
+.pw{display:flex;gap:10px;font-weight:900;font-size:13px;}
+.pw span{white-space:nowrap;}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.chip{font-size:10.5px;border:1px solid var(--line);border-radius:10px;padding:1px 7px;background:var(--paper);}
+.chip.you{background:#F3ECDC;}
+
+.panel{background:#F3ECDC;border:1px solid var(--line);border-radius:6px;padding:11px 12px;margin-top:10px;}
+.banner{background:var(--ink);color:var(--paper);border-radius:6px;padding:9px 12px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.banner .t{font-family:"RocknRoll One";font-size:15px;}
+.banner.last{background:var(--warn);}
+
+/* turn progress bar */
+.turn-bar{height:5px;background:rgba(255,255,255,.15);border-radius:3px;margin-top:7px;overflow:hidden;width:100%;}
+.turn-fill{height:100%;background:rgba(255,255,255,.6);border-radius:3px;transition:width .4s ease;}
+
+.sab{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+.sab .lbl{font-size:11px;font-weight:700;color:var(--muted);}
+.sabcard{font-size:11.5px;padding:5px 9px;}
+
+.log{background:#231d16;color:#e8ddc9;border-radius:6px;padding:8px 11px;font-size:11.5px;
+  line-height:1.7;max-height:115px;overflow-y:auto;margin-top:10px;}
+.log div{opacity:.8;}
+.log div:last-child{opacity:1;font-weight:700;}
+.log .you{color:#f0d878;} .log .bot{color:#9ec4a0;} .log .sab{color:#f0a868;} .log .sys{color:#a0b8d8;font-style:italic;}
+
+/* score preview */
+.preview{background:#eef7f1;border:1px solid #b8d8c4;border-radius:6px;padding:9px 12px;margin-top:10px;}
+.preview .ttl{font-size:11px;font-weight:900;color:var(--m);letter-spacing:.06em;margin-bottom:5px;}
+.preview table{font-size:11.5px;margin-top:0;}
+.preview th,.preview td{padding:3px 7px;border-bottom:1px solid #c8e0d0;text-align:right;}
+.preview th.l,.preview td.l{text-align:left;}
+.preview .you-r td{font-weight:900;background:#d4f0e0;}
+.preview .you-r .nm{color:var(--accent);}
+.preview .rank-badge{font-size:11px;}
+
+/* results table */
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12px;}
+th,td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--line2);}
+th{font-weight:900;border-bottom:1.5px solid var(--line);}
+td.l,th.l{text-align:left;}
+tr.win td{background:#F3ECDC;font-weight:900;}
+.src{font-size:10px;color:var(--muted);line-height:1.4;}
+
+/* config panel */
+.cfg label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;
+  padding:3px 0;border-bottom:1px dotted var(--line2);}
+.cfg input{width:62px;font-family:inherit;font-size:12px;text-align:center;border:1px solid var(--line);
+  border-radius:4px;padding:3px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px;}
+
+/* ===== detail modal ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;
+  align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modal-box{background:var(--paper);border-radius:10px;padding:18px;max-width:340px;width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);animation:modalIn .2s ease-out;}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(8px);}to{opacity:1;transform:none;}}
+.sdp-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.sdp-name{font-family:"RocknRoll One";font-size:20px;}
+.sdp-inst{font-size:13px;color:var(--muted);}
+.sdp-close{margin-left:auto;font-size:12px;padding:3px 8px;border-radius:8px;}
+.sdp-stats{display:flex;gap:12px;font-weight:900;font-size:15px;margin-bottom:12px;}
+.sdp-section{margin-bottom:10px;}
+.sdp-sec-label{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:4px;}
+.sdp-row{border:1px solid var(--line2);border-radius:6px;padding:8px 10px;background:var(--card);}
+.sdp-row .sn{font-weight:900;font-size:13px;}
+.sdp-row .sd{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.sdp-row .sa{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:10px;
+  display:inline-block;margin-top:2px;}
+.sdp-row.good .sa{background:#d4f0e0;color:#1a5c3a;}
+.sdp-row.inactive .sa{background:#f0ece4;color:var(--muted);}
+.sdp-row.neutral .sa{background:#f0ece4;color:var(--muted);}
+.sdp-row.bad .sa{background:#fce8e4;color:#8a1a0a;}
+.sdp-row.risk-row{border-color:var(--r);}
+.sdp-scout{width:100%;margin-top:14px;background:var(--accent);color:#fff;border-color:var(--accent);font-size:14px;}
+.sdp-scout:hover{background:#7a1a10;}
+
+/* ===== toast ===== */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:#231d16;color:#e8ddc9;border-radius:20px;padding:8px 18px;
+  font-size:13px;font-weight:700;opacity:0;transition:opacity .25s,transform .25s;
+  z-index:300;max-width:85vw;text-align:center;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.t-scout{background:var(--m);color:#fff;}
+.toast.t-practice-r{background:var(--r);color:#fff;}
+.toast.t-practice-m{background:var(--m);color:#fff;}
+.toast.t-sab{background:var(--h);color:#fff;}
+.toast.t-warn{background:var(--warn);color:#fff;}
+
+/* ===== animations ===== */
+@keyframes chipIn{from{opacity:0;transform:scale(.7) translateY(6px);}to{opacity:1;transform:none;}}
+.chip-in{animation:chipIn .3s cubic-bezier(.2,0,.8,1);}
+@keyframes bannerPulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+
+@media(max-width:560px){.mem{width:calc(50% - 4px);}.grid2{grid-template-columns:1fr;}h1{font-size:22px;}}
+</style>
+</head>
+<body>
+<div id="modal-container"></div>
+<div class="wrap"><div class="sheet" id="app"></div></div>
+
+<script>
+"use strict";
+
+/* ====== 調整できる数値 ====== */
+const CONFIG = {
+  turns:8, bandCap:6, practiceGain:2, varietyCoef:2,
+  song1:{h:2,m:1}, song2:{r:2,m:1},
+  placement:{2:[3,0],3:[5,2,0],4:[5,3,1,0],5:[5,3,2,1,0]},
+  stageFrightProb:0.7, stageFrightPenalty:2,
+};
+
+const INST = {
+  vocal:{label:"ボーカル",r:0,m:3,h:1}, guitar:{label:"ギター",r:1,m:3,h:0},
+  bass:{label:"ベース",r:2,m:0,h:0}, cajon:{label:"カホン",r:3,m:0,h:0},
+  keyboard:{label:"キーボード",r:0,m:0,h:3},
+};
+const INST_KEYS = Object.keys(INST);
+function primary(i){return(i==="cajon"||i==="bass")?"r":(i==="keyboard")?"h":"m";}
+
+const LEAD = {
+  metronome:{n:"メトロノーム",d:"縦の練習が+3"},
+  frontman:{n:"フロントマン",d:"アンコールで横+4"},
+  headhunter:{n:"ヘッドハンター",d:"2回まで覗ける"},
+  stoic:{n:"ストイック",d:"3人以下なら全軸+4"},
+};
+const OPEN = {
+  big_ensemble:{n:"大編成向き",d:"5人以上で横+3"},
+  small_elite:{n:"少数精鋭",d:"3人以下で担当軸+3"},
+  harmonizer:{n:"ハモり上手",d:"高さ+2"},
+  tight_rhythm:{n:"几帳面なリズム",d:"カホン/ベースがいれば縦+2"},
+  crowd_pleaser:{n:"ムードメーカー",d:"アンコールで横+2"},
+  wildcard:{n:"飛び道具",d:"種類数+1（高さ）"},
+};
+const CLOSED = {
+  hidden_ace:{n:"隠れた名手",d:"担当軸の基礎+2",risk:false},
+  clutch:{n:"本番に強い",d:"各曲+3",risk:false},
+  born_star:{n:"天性のスター",d:"アンコールで横+5",risk:false},
+  stage_fright:{n:"本番×",d:"70%で縦横-2",risk:true},
+  practice_averse:{n:"練習嫌い",d:"練習-1",risk:true},
+  misfit:{n:"はみ出し者",d:"4人以上で担当軸-2",risk:true},
+};
+const OPEN_KEYS=Object.keys(OPEN), CLOSED_KEYS=Object.keys(CLOSED), LEAD_KEYS=Object.keys(LEAD);
+
+/* ====== メンバー名一覧（60人分）====== */
+const NAMES = [
+  "アキ","ナナ","リク","ソラ","コウ","ミオ","レイ","ユウ","カナ","ハル",
+  "ショウ","ツバサ","マイ","ケン","アヤ","タイチ","ノア","ヒナ","ルイ","ゼン",
+  "モモ","タク","ミサ","コト","ジン","ラン","ユキ","ハジメ","サクラ","ダイ",
+  "リン","ミズキ","カイ","ナオ","セイ","ヒロ","ノブ","マコト","イオ","タキ",
+  "リョウ","チハル","ミキ","ヒカル","ソウ","フウ","キョウ","ニナ","リサ","ヒビキ",
+  "サヤ","テツ","タマ","ユイ","ワタル","カリン","アサヒ","ジュン","エリ","マサル",
+];
+
+/* ====== seeded RNG ====== */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function pick(arr){return arr[Math.floor(state.rng()*arr.length)];}
+
+let state={};
+
+/* ====== setup ====== */
+function newSetup(){
+  const seed=Math.floor(Math.random()*1e9);
+  state={phase:"setup",seed,rng:mulberry32(seed),
+    setup:{count:3,instrument:"vocal",leaderChoices:[],leader:null,open:null}};
+  const lc=LEAD_KEYS.slice(); shuffle(lc);
+  state.setup.leaderChoices=[lc[0],lc[1]];
+  state.setup.open=OPEN_KEYS[Math.floor(state.rng()*OPEN_KEYS.length)];
+  render();
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(state.rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function makeMember(id){
+  return{id,name:NAMES[id%NAMES.length],instrument:pick(INST_KEYS),open:pick(OPEN_KEYS),closed:pick(CLOSED_KEYS),peeked:false};
+}
+
+function startGame(seedOverride){
+  // state.setup は初回のみ存在。再戦時は lastSetup にフォールバック
+  const s=state.setup||state.lastSetup;
+  if(!s){newSetup();return;}
+  const seed=(seedOverride!=null&&seedOverride!=="")?(parseInt(seedOverride,10)||state.seed):Math.floor(Math.random()*1e9);
+  const rng=mulberry32(seed);
+  const ng={phase:"play",seed,rng,playerCount:s.count,round:0,reserved:null,log:[],
+    pendingSab:null,headhunterLeft:(s.leader==="headhunter"?2:0),
+    detailCard:null,lastAction:null,
+    lastSetup:s,  // 再戦時に使えるよう保持
+    bands:[],deck:[],market:[],results:null};
+  state=ng;
+  let id=0; for(let i=0;i<60;i++) ng.deck.push(makeMember(id++));
+  shuffle(ng.deck);
+  const arche=["wide","narrow","balanced","random"];
+  for(let seat=0;seat<s.count;seat++){
+    if(seat===0) ng.bands.push(band(seat,"あなた",true,s.instrument,s.leader,s.open,"human"));
+    else{
+      const a=arche[(seat-1)%arche.length];
+      ng.bands.push(band(seat,"対戦相手"+String.fromCharCode(65+seat),false,
+        pick(INST_KEYS),pick(LEAD_KEYS),pick(OPEN_KEYS),a));
+    }
+  }
+  for(let i=0;i<s.count+2;i++) ng.market.push(ng.deck.pop());
+  dealSab();
+  log("ゲーム開始（seed "+seed+"）","sys");
+  render();
+}
+
+/* BUG FIX: 初期値は空配列。dealSab()で2枚配布する */
+function band(seat,nm,you,inst,lead,open,arche){
+  return{seat,name:nm,you,instrument:inst,leader:lead,open,archetype:arche,
+    members:[],practiceR:0,practiceM:0,sabotage:[],lockNext:false};
+}
+function dealSab(){
+  const all=["studio_lockout","snipe","backstage_peek"];
+  state.bands.forEach(b=>{const c=all.slice();shuffle(c);b.sabotage=[c[0],c[1]];});
+}
+
+function log(t,cls=""){state.log.push({t,cls});}
+
+/* ====== helpers ====== */
+function size(b){return b.members.length+1;}
+
+/* BUG FIX: practice_averse と lockNext を含めた実際のゲイン */
+function calcGain(b,axis){
+  let g=CONFIG.practiceGain;
+  if(axis==="r"&&b.leader==="metronome")g+=1;
+  g-=b.members.filter(x=>x.closed==="practice_averse").length;
+  if(b.lockNext)g-=1;
+  return Math.max(0,g);
+}
+
+/* ====== スキル状況分析 ====== */
+function openSkillStatus(skillKey,mem,band){
+  const sz=size(band)+1;
+  const all=[band.instrument,...band.members.map(x=>x.instrument),mem.instrument];
+  const hasR=all.some(i=>i==="cajon"||i==="bass");
+  switch(skillKey){
+    case"big_ensemble":
+      return sz>=5?{cls:"good",txt:`✓ ${sz}人→横+3（発動中）`}:{cls:"inactive",txt:`現在${sz}人、5人から発動（あと${5-sz}人）`};
+    case"small_elite":
+      return sz<=3?{cls:"good",txt:`✓ ${sz}人→担当軸+3（発動中）`}:{cls:"inactive",txt:`現在${sz}人、3人以下で発動`};
+    case"harmonizer":
+      return{cls:"good",txt:"✓ 常時発動 → 高さ+2"};
+    case"tight_rhythm":
+      return hasR?{cls:"good",txt:"✓ カホン/ベースあり → 縦+2（発動中）"}:{cls:"inactive",txt:"カホン/ベースなし（非発動）"};
+    case"crowd_pleaser":
+      return{cls:"neutral",txt:"アンコール時に横+2（本番のみ）"};
+    case"wildcard":
+      return{cls:"good",txt:"✓ 高さ計算の種類数+1"};
+  }
+  return{cls:"neutral",txt:""};
+}
+
+function closedSkillStatus(closedKey,mem){
+  const pri=primary(mem.instrument);
+  const pn={r:"縦",m:"横",h:"高さ"}[pri];
+  switch(closedKey){
+    case"hidden_ace":return{cls:"good",txt:`✓ 担当軸（${pn}）+2`};
+    case"clutch":return{cls:"good",txt:"✓ 本番で各曲スコア+3"};
+    case"born_star":return{cls:"good",txt:"✓ アンコール時に横+5"};
+    case"stage_fright":return{cls:"bad",txt:`⚠ 本番70%で縦横-${CONFIG.stageFrightPenalty}（危険！）`};
+    case"practice_averse":return{cls:"bad",txt:"⚠ あなたの練習ゲイン全て-1（危険！）"};
+    case"misfit":return{cls:"bad",txt:`⚠ バンド4人以上なら${pn}-2（注意）`};
+  }
+  return{cls:"neutral",txt:""};
+}
+
+/* ====== scoring ====== */
+function auditionBase(b){
+  const P={r:0,m:0,h:0};
+  const all=[b.instrument,...b.members.map(x=>x.instrument)];
+  all.forEach(i=>{const x=INST[i];P.r+=x.r;P.m+=x.m;P.h+=x.h;});
+  const sz=size(b),hasR=all.some(i=>i==="cajon"||i==="bass");
+  const carr=[{s:b.open,i:b.instrument},...b.members.map(x=>({s:x.open,i:x.instrument}))];
+  carr.forEach(c=>{
+    if(c.s==="harmonizer")P.h+=2;
+    else if(c.s==="tight_rhythm"&&hasR)P.r+=2;
+    else if(c.s==="big_ensemble"&&sz>=5)P.m+=3;
+    else if(c.s==="small_elite"&&sz<=3)P[primary(c.i)]+=3;
+  });
+  b.members.forEach(x=>{
+    if(x.closed==="hidden_ace")P[primary(x.instrument)]+=2;
+    else if(x.closed==="misfit"&&sz>=4)P[primary(x.instrument)]-=2;
+  });
+  P.r+=b.practiceR;P.m+=b.practiceM;
+  let types=new Set(all).size; if(carr.some(c=>c.s==="wildcard"))types+=1;
+  P.h+=CONFIG.varietyCoef*Math.max(0,types-2);
+  if(b.leader==="stoic"&&sz<=3){P.r+=4;P.m+=4;P.h+=4;}
+  return P;
+}
+
+function auditionBreakdown(b){
+  const base={r:0,m:0,h:0},skill={r:0,m:0,h:0};
+  const all=[b.instrument,...b.members.map(x=>x.instrument)];
+  all.forEach(i=>{const x=INST[i];base.r+=x.r;base.m+=x.m;base.h+=x.h;});
+  const sz=size(b),hasR=all.some(i=>i==="cajon"||i==="bass");
+  const carr=[{s:b.open,i:b.instrument},...b.members.map(x=>({s:x.open,i:x.instrument}))];
+  carr.forEach(c=>{
+    if(c.s==="harmonizer")skill.h+=2;
+    else if(c.s==="tight_rhythm"&&hasR)skill.r+=2;
+    else if(c.s==="big_ensemble"&&sz>=5)skill.m+=3;
+    else if(c.s==="small_elite"&&sz<=3)skill[primary(c.i)]+=3;
+  });
+  b.members.forEach(x=>{
+    if(x.closed==="hidden_ace")skill[primary(x.instrument)]+=2;
+    else if(x.closed==="misfit"&&sz>=4)skill[primary(x.instrument)]-=2;
+  });
+  let types=new Set(all).size; if(carr.some(c=>c.s==="wildcard"))types+=1;
+  const variety=CONFIG.varietyCoef*Math.max(0,types-2);
+  const stoic=(b.leader==="stoic"&&sz<=3)?4:0;
+  return{base,practice:{r:b.practiceR,m:b.practiceM,h:0},skill,variety,stoic};
+}
+
+function songScore(b,song){
+  const P=auditionBase(b);let{r,m,h}=P,trig=0;
+  b.members.forEach(x=>{if(x.closed==="stage_fright"&&state.rng()<CONFIG.stageFrightProb)trig++;});
+  r-=CONFIG.stageFrightPenalty*trig;m-=CONFIG.stageFrightPenalty*trig;
+  let sc=(song.r||0)*r+(song.m||0)*m+(song.h||0)*h;
+  sc+=3*b.members.filter(x=>x.closed==="clutch").length;
+  return{score:Math.round(sc),trig};
+}
+function encoreMel(b){
+  let m=auditionBase(b).m;
+  if(b.leader==="frontman")m+=4;
+  const op=[b.open,...b.members.map(x=>x.open)];
+  m+=op.filter(s=>s==="crowd_pleaser").length*2;
+  m+=b.members.filter(x=>x.closed==="born_star").length*5;
+  return m;
+}
+function projectedScore(b,song){
+  const P=auditionBase(b);
+  return Math.round((song.r||0)*P.r+(song.m||0)*P.m+(song.h||0)*P.h);
+}
+
+/* ====== actions ====== */
+function refill(){while(state.market.length<state.playerCount+2&&state.deck.length)state.market.push(state.deck.pop());}
+
+function scout(b,mem){
+  state.market=state.market.filter(x=>x.id!==mem.id);
+  if(state.reserved===mem.id)state.reserved=null;
+  b.members.push(mem);refill();
+  if(b.you) state.lastAction={type:"scout",memberId:mem.id,name:mem.name,inst:INST[mem.instrument].label};
+  log(`${b.name}が${mem.name}（${INST[mem.instrument].label}）をスカウト`,b.you?"you":"bot");
+}
+function practice(b,axis){
+  let g=calcGain(b,axis);
+  if(b.lockNext)b.lockNext=false;
+  if(axis==="r")b.practiceR+=g;else b.practiceM+=g;
+  const axName=axis==="r"?"縦":"横";
+  if(b.you)state.lastAction={type:"practice",axis,gain:g};
+  log(`${b.name}が${axName}を練習 (+${g})`,b.you?"you":"bot");
+}
+
+function powerLeader(exSeat){
+  let best=null,bv=-1e9;
+  state.bands.forEach(b=>{if(b.seat===exSeat)return;const P=auditionBase(b);const v=P.r+P.m+P.h;if(v>bv){bv=v;best=b;}});
+  return best;
+}
+function botSab(b){
+  if(!b.sabotage.length)return;
+  if(state.rng()<0.3&&b.sabotage.includes("studio_lockout")){
+    const t=powerLeader(b.seat);
+    if(t){t.lockNext=true;b.sabotage=b.sabotage.filter((c,i)=>!(c==="studio_lockout"&&i===b.sabotage.indexOf("studio_lockout")));
+      log(`${b.name}が${t.name}にスタジオ確保（次練習-1）`,"sab");}
+  }
+}
+function botAct(b){
+  const sz=size(b),mkt=state.market.filter(mm=>state.reserved!==mm.id);
+  const have=new Set([b.instrument,...b.members.map(x=>x.instrument)]);
+  const newType=()=>mkt.find(mm=>!have.has(mm.instrument))||mkt[0];
+  const a=b.archetype;
+  if(a==="wide"){if(sz<6&&mkt.length)return{scout:newType()};return{practice:"m"};}
+  if(a==="narrow"){
+    if(b.members.length<2&&mkt.length)return{scout:mkt.find(m=>m.instrument==="cajon")||mkt.find(m=>m.instrument==="bass")||mkt[0]};
+    if(b.practiceR>=6&&b.practiceM<4)return{practice:"m"};
+    return{practice:"r"};
+  }
+  if(a==="balanced"){if(b.members.length<3&&mkt.length)return{scout:newType()};return{practice:b.practiceR<=b.practiceM?"r":"m"};}
+  const o=[];if(sz<6&&mkt.length)o.push({scout:mkt[Math.floor(state.rng()*mkt.length)]});o.push({practice:state.rng()<.5?"r":"m"});
+  return o[Math.floor(state.rng()*o.length)];
+}
+function applyBot(b){botSab(b);const act=botAct(b);if(act.scout&&size(b)<CONFIG.bandCap)scout(b,act.scout);else practice(b,act.practice||"m");}
+
+function endPlayerTurn(){
+  for(let s=1;s<state.playerCount;s++)applyBot(state.bands[s]);
+  state.round++;
+  if(state.round>=CONFIG.turns){runAudition();return;}
+  state.reserved=null;
+  render();
+}
+
+function placement(scores){
+  const tbl=CONFIG.placement[state.playerCount]||[];
+  const sorted=[...scores].sort((x,y)=>y.score-x.score);
+  const pts={};sorted.forEach((s,i)=>pts[s.seat]=tbl[i]??0);return pts;
+}
+function runAudition(){
+  const s1=state.bands.map(b=>({seat:b.seat,...songScore(b,CONFIG.song1)}));
+  const s2=state.bands.map(b=>({seat:b.seat,...songScore(b,CONFIG.song2)}));
+  const p1=placement(s1),p2=placement(s2);
+  const totals=state.bands.map(b=>({seat:b.seat,total:(p1[b.seat]||0)+(p2[b.seat]||0)}));
+  const maxT=Math.max(...totals.map(t=>t.total));
+  let cont=totals.filter(t=>t.total===maxT).map(t=>t.seat),winner,encore=null;
+  if(cont.length>1){
+    encore=cont.map(seat=>({seat,mel:encoreMel(state.bands[seat])}));
+    const mx=Math.max(...encore.map(e=>e.mel));
+    const w=encore.filter(e=>e.mel===mx);
+    winner=w[Math.floor(state.rng()*w.length)].seat;
+  }else winner=cont[0];
+  state.results={s1,s2,p1,p2,totals,winner,encore,
+    bases:state.bands.map(b=>auditionBase(b)),breakdowns:state.bands.map(b=>auditionBreakdown(b))};
+  state.phase="audition";render();
+}
+
+/* ====== UI helpers ====== */
+
+/* BUG FIX: data-mid を常に付与。clickScout のときのみ data-action="scout" */
+function memCard(mem,opts){
+  const i=INST[mem.instrument];
+  let cl="mem"+(opts.clickScout?" click":"")+(opts.reserved?" res":"")+(opts.snipeTarget?" snipe-target":"");
+  if(opts.newSynergy)cl+=" new-synergy";
+  if(opts.riskyPeeked)cl+=" risky-peeked";
+
+  let closedHtml;
+  if(opts.showClosed){const c=CLOSED[mem.closed];closedHtml=`<div class="closed">隠:<b class="${c.risk?'risk':''}">${c.n}</b> <span class="muted">${c.d}</span></div>`;}
+  else closedHtml=`<div class="closed muted">隠: ？</div>`;
+
+  const actionAttr=opts.clickScout?` data-action="scout"`:"";
+  const peek=opts.peekable&&!mem.peeked?`<button class="peek" data-action="peek" data-mid="${mem.id}">覗</button>`:"";
+  const newBadge=opts.isNewType?`<span class="new-type">NEW</span>`:"";
+  const detailBadge=`<button class="detail-btn" data-action="opendetail" data-mid="${mem.id}">詳細</button>`;
+
+  return `<div class="${cl}" data-mid="${mem.id}"${actionAttr}>
+    ${peek}
+    <div class="mname">${mem.name}</div>
+    <div class="inst">${i.label}</div>
+    <div class="stats"><span class="r">縦${i.r}</span> <span class="m">横${i.m}</span> <span class="h">高${i.h}</span></div>
+    <div class="sk">表:<b>${OPEN[mem.open].n}</b></div>
+    ${closedHtml}
+    ${newBadge}
+    ${detailBadge}
+  </div>`;
+}
+
+function pwTag(P){return `<div class="pw"><span class="r">縦 ${P.r}</span><span class="m">横 ${P.m}</span><span class="h">高 ${P.h}</span></div>`;}
+
+function bandView(b,full){
+  const P=auditionBase(b);
+  const chips=b.members.map(m=>{
+    const showC=full||b.you;const c=CLOSED[m.closed];
+    return `<span class="chip${b.you?" you":""}" data-mid="${m.id}">${m.name}・${INST[m.instrument].label}・${OPEN[m.open].n}${showC?` <span class="${c.risk?"risk":""}">${c.n}</span>`:""}</span>`;
+  }).join("");
+  const capLabel=`<span class="muted" style="font-size:10px">${size(b)}/${CONFIG.bandCap}人</span>`;
+  return `<div class="band${b.you?" you":""}">
+    <div class="top">
+      <div><span class="nm">${b.name}</span> ${capLabel} <span class="lead">／ ${INST[b.instrument].label}・${LEAD[b.leader].n}・${OPEN[b.open].n}</span></div>
+      ${pwTag(P)}
+    </div>
+    <div class="chips"><span class="chip${b.you?" you":""}">（自分:${INST[b.instrument].label}）</span>${chips||'<span class="muted" style="font-size:11px">メンバーなし</span>'}</div>
+  </div>`;
+}
+
+function renderScorePreview(){
+  // 現在の予測スコアでランク付け
+  const scored=state.bands.map(b=>{
+    const sc1=projectedScore(b,CONFIG.song1);
+    const sc2=projectedScore(b,CONFIG.song2);
+    return{seat:b.seat,sc1,sc2,total:sc1+sc2};
+  }).sort((a,b)=>b.total-a.total);
+  const rankMap={};scored.forEach((s,i)=>rankMap[s.seat]=i);
+  const ranks=["1位","2位","3位","4位","5位"];
+
+  const rows=state.bands.map(b=>{
+    const P=auditionBase(b);
+    const sc1=projectedScore(b,CONFIG.song1),sc2=projectedScore(b,CONFIG.song2);
+    const rank=rankMap[b.seat];
+    return `<tr class="${b.you?"you-r":""}">
+      <td class="l ${b.you?"nm":""}">${b.name}</td>
+      <td><span class="r">${P.r}</span></td><td><span class="m">${P.m}</span></td><td><span class="h">${P.h}</span></td>
+      <td><b>${sc1}</b></td><td><b>${sc2}</b></td><td><b>${sc1+sc2}</b></td>
+      <td class="rank-badge">${ranks[rank]||""}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="preview">
+    <div class="ttl">予測スコア（現在地・本番×なし）</div>
+    <table>
+      <tr><th class="l">バンド</th><th><span class="r">縦</span></th><th><span class="m">横</span></th><th><span class="h">高</span></th>
+        <th>1曲目<br><span style="font-size:9px;font-weight:500">高×${CONFIG.song1.h}+横×${CONFIG.song1.m}</span></th>
+        <th>2曲目<br><span style="font-size:9px;font-weight:500">縦×${CONFIG.song2.r}+横×${CONFIG.song2.m}</span></th>
+        <th>合計</th><th>順位</th></tr>
+      ${rows}
+    </table>
+  </div>`;
+}
+
+/* ====== detail modal ====== */
+function renderDetailModal(mem,band){
+  const i=INST[mem.instrument];
+  const openSk=OPEN[mem.open];
+  const oStatus=openSkillStatus(mem.open,mem,band);
+  let closedHtml="";
+  if(mem.peeked){
+    const c=CLOSED[mem.closed];const cSt=closedSkillStatus(mem.closed,mem);
+    closedHtml=`<div class="sdp-row ${cSt.cls==="bad"?"bad risk-row":cSt.cls}">
+      <div class="sn">${c.n}</div>
+      <div class="sd">${c.d}</div>
+      <span class="sa">${cSt.txt}</span>
+    </div>`;
+  }else{
+    closedHtml=`<div class="sdp-row inactive">
+      <div class="sn">不明</div>
+      <div class="sd">スカウト前は見えない</div>
+      <span class="sa">覗くと確認できます</span>
+    </div>`;
+  }
+  const canScout=size(band)<CONFIG.bandCap&&!state.pendingSab&&!(state.reserved&&state.reserved!==mem.id);
+  return `<div class="modal-overlay" data-action="closedetail">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="sdp-head">
+        <span class="sdp-name">${mem.name}</span>
+        <span class="sdp-inst">${i.label}</span>
+        <button class="sdp-close ghost" data-action="closedetail">✕ 閉じる</button>
+      </div>
+      <div class="sdp-stats">
+        <span class="r">縦 ${i.r}</span>
+        <span class="m">横 ${i.m}</span>
+        <span class="h">高 ${i.h}</span>
+      </div>
+      <div class="sdp-section">
+        <div class="sdp-sec-label">オープンスキル</div>
+        <div class="sdp-row ${oStatus.cls}">
+          <div class="sn">${openSk.n}</div>
+          <div class="sd">${openSk.d}</div>
+          <span class="sa">${oStatus.txt}</span>
+        </div>
+      </div>
+      <div class="sdp-section">
+        <div class="sdp-sec-label">クローズドスキル</div>
+        ${closedHtml}
+      </div>
+      ${canScout?`<button class="sdp-scout big" data-action="scout-from-modal" data-mid="${mem.id}">スカウトする →</button>`:`<button class="sdp-scout big" disabled>スカウト不可</button>`}
+    </div>
+  </div>`;
+}
+
+/* ====== toast ====== */
+let _toastTimer=null;
+function showToast(msg,cls=""){
+  let el=document.getElementById("_toast");
+  if(!el){el=document.createElement("div");el.id="_toast";el.className="toast";document.body.appendChild(el);}
+  clearTimeout(_toastTimer);
+  el.textContent=msg;el.className="toast "+(cls||"");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("show")));
+  _toastTimer=setTimeout(()=>{el.classList.remove("show");},2200);
+}
+
+/* ====== after-render animations ====== */
+function afterRender(){
+  const la=state.lastAction;
+  if(!la)return;
+  state.lastAction=null;
+  if(la.type==="scout"){
+    const chip=document.querySelector(`.band.you .chip[data-mid="${la.memberId}"]`);
+    if(chip){chip.classList.add("chip-in");chip.addEventListener("animationend",()=>chip.classList.remove("chip-in"),{once:true});}
+    showToast(`${la.name}（${la.inst}）をスカウト！`,"t-scout");
+  }
+  if(la.type==="practice"){
+    showToast(`${la.axis==="r"?"縦":"横"}を練習 +${la.gain}`,`t-practice-${la.axis}`);
+    const btn=document.querySelector(`button[data-action="practice"][data-axis="${la.axis}"]`);
+    if(btn&&la.gain>0){
+      const el=document.createElement("div");
+      el.textContent="+"+la.gain;
+      el.style.cssText=`position:fixed;color:${la.axis==="r"?"#BE4A2C":"#2E7D6B"};font-weight:900;font-size:22px;pointer-events:none;z-index:9999;text-shadow:0 2px 6px rgba(0,0,0,.25);`;
+      const rect=btn.getBoundingClientRect();
+      el.style.left=(rect.left+rect.width/2-14)+"px";
+      el.style.top=(rect.top-4)+"px";
+      document.body.appendChild(el);
+      el.animate([{opacity:1,transform:"translateY(0) scale(1)"},{opacity:0,transform:"translateY(-52px) scale(1.4)"}],
+        {duration:900,easing:"cubic-bezier(.2,0,.8,1)"}).onfinish=()=>el.remove();
+    }
+  }
+}
+
+/* ====== render ====== */
+function render(){
+  const app=document.getElementById("app");
+  if(state.phase==="setup")app.innerHTML=renderSetup();
+  else if(state.phase==="play")app.innerHTML=renderPlay();
+  else app.innerHTML=renderAudition();
+  const logEl=app.querySelector(".log");if(logEl)logEl.scrollTop=logEl.scrollHeight;
+  renderModal();
+  afterRender();
+}
+function renderModal(){
+  const mc=document.getElementById("modal-container");if(!mc)return;
+  if(state.phase!=="play"||state.detailCard===null){mc.innerHTML="";return;}
+  const mem=state.market.find(m=>m.id===state.detailCard);
+  if(!mem){mc.innerHTML="";state.detailCard=null;return;}
+  mc.innerHTML=renderDetailModal(mem,state.bands[0]);
+}
+
+function renderSetup(){
+  const s=state.setup;
+  const counts=[2,3,4,5].map(n=>`<button class="${s.count===n?"sel":""}" data-action="count" data-n="${n}">${n}人</button>`).join("");
+  const insts=INST_KEYS.map(k=>`<button class="${s.instrument===k?"sel":""}" data-action="inst" data-k="${k}">${INST[k].label}<br><span style="font-size:10px;font-weight:500">縦${INST[k].r} 横${INST[k].m} 高${INST[k].h}</span></button>`).join("");
+  const leads=s.leaderChoices.map(k=>`<button class="${s.leader===k?"sel":""}" data-action="lead" data-k="${k}" style="text-align:left">${LEAD[k].n}<br><span style="font-size:10px;font-weight:500">${LEAD[k].d}</span></button>`).join("");
+  return `<div class="kick">Band Audition</div>
+    <h1>バンド・<span class="a">オーディション</span></h1>
+    <p class="note">自分のバンドを編成し、2曲のオーディションで競り勝つ。AI相手にいつでも対戦できます。終わったら数値を変えて再戦しましょう。</p>
+    <h2><span class="dot bg-r"></span>人数</h2><div class="row">${counts}</div>
+    <h2><span class="dot bg-m"></span>あなたの楽器</h2><div class="row">${insts}</div>
+    <h2><span class="dot bg-h"></span>リーダースキル（2枚から1枚）</h2><div class="row">${leads}</div>
+    <div class="panel" style="margin-top:12px">あなたのオープンスキル：<b>${OPEN[s.open].n}</b> <span class="muted">（${OPEN[s.open].d}）</span></div>
+    <div class="row" style="margin-top:14px">
+      <button class="big" data-action="start" ${s.leader?"":"disabled"}>はじめる</button>
+      <button class="big ghost" data-action="reroll">引き直す</button>
+    </div>`;
+}
+
+function renderPlay(){
+  const you=state.bands[0];
+  const canScout=size(you)<CONFIG.bandCap;
+  const turnNo=state.round+1;
+  const isLast=turnNo>=CONFIG.turns;
+  const pct=Math.round((state.round/CONFIG.turns)*100);
+  const opp=state.bands.slice(1).map(b=>bandView(b,false)).join("");
+
+  const yourTypes=new Set([you.instrument,...you.members.map(x=>x.instrument)]);
+  const market=state.market.map(mem=>{
+    const isBlockedByOther=state.reserved&&state.reserved!==mem.id;
+    const isReservedByMe=state.reserved===mem.id;
+    const peekable=state.headhunterLeft>0||state.pendingSab==="backstage_peek";
+    const showClosed=mem.peeked;
+    const clickScout=canScout&&!state.pendingSab&&!isBlockedByOther;
+    const snipeTarget=state.pendingSab==="snipe"&&!isBlockedByOther;
+    const isNewType=!yourTypes.has(mem.instrument);
+    // シナジー評価（表スキルと新種類）
+    const newSynergy=isNewType&&openSkillStatus(mem.open,mem,you).cls==="good";
+    const riskyPeeked=mem.peeked&&CLOSED[mem.closed].risk;
+    return memCard(mem,{clickScout,showClosed,peekable,reserved:isReservedByMe,snipeTarget,isNewType,newSynergy,riskyPeeked});
+  }).join("");
+
+  const sabNames={studio_lockout:"スタジオ確保",snipe:"横取り宣言",backstage_peek:"楽屋のぞき見"};
+  const sabBtns=you.sabotage.map(c=>`<button class="sabcard ${state.pendingSab===c?"sel":""}" data-action="sab" data-card="${c}">${sabNames[c]}</button>`).join("");
+
+  let pendMsg="";
+  if(state.pendingSab==="studio_lockout")pendMsg=`<div class="note" style="margin-top:6px">⚡ <b>スタジオ確保</b>：弱体化する相手を選んでください。<button data-action="cancelsab" style="margin-left:6px">やめる</button></div>`;
+  if(state.pendingSab==="snipe")pendMsg=`<div class="note" style="margin-top:6px">⚡ <b>横取り宣言</b>：予約するメンバーを選んでください（緑枠）。<button data-action="cancelsab" style="margin-left:6px">やめる</button></div>`;
+  if(state.pendingSab==="backstage_peek")pendMsg=`<div class="note" style="margin-top:6px">⚡ <b>楽屋のぞき見</b>：「覗」ボタンで中身を確認。<button data-action="cancelsab" style="margin-left:6px">やめる</button></div>`;
+
+  const oppTargets=state.pendingSab==="studio_lockout"
+    ?`<div class="row" style="margin-top:6px">`+state.bands.slice(1).map(b=>`<button data-action="sabtarget" data-seat="${b.seat}">${b.name}</button>`).join("")+`</div>`:"";
+  const headh=state.headhunterLeft>0?`<span class="lbl" style="color:var(--h)">ヘッドハンター 残${state.headhunterLeft}回（「覗」で使用→スカウト可）</span>`:"";
+
+  const gainR=calcGain(you,"r"),gainM=calcGain(you,"m");
+  const paCount=you.members.filter(x=>x.closed==="practice_averse").length;
+  const paWarn=paCount>0?`<span class="muted" style="font-size:11px">（練習嫌い×${paCount}）</span>`:"";
+  const lockWarn=you.lockNext?`<span class="muted" style="font-size:11px">（スタジオ確保-1）</span>`:"";
+
+  return `<div class="banner ${isLast?"last":""}">
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="t">${isLast?"⚠ ラスト手番！":"手番"} ${turnNo} / ${CONFIG.turns}</span>
+          <span style="font-size:11px;font-weight:400;opacity:.7">seed ${state.seed}</span>
+        </div>
+        <div class="turn-bar"><div class="turn-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+
+    <h2><span class="dot bg-h"></span>場（タップでスカウト）
+      <span class="muted" style="font-size:11px;font-weight:500">残り山札 ${state.deck.length}枚</span>
+      <span class="muted" style="font-size:11px;font-weight:500">　緑枠＝新種類かつスキル発動、詳細ボタンで効果確認</span>
+    </h2>
+    <div class="mkt">${market}</div>
+    ${pendMsg}${oppTargets}
+
+    <h2><span class="dot bg-r"></span>あなたのバンド</h2>
+    ${bandView(you,true)}
+    <div class="row" style="margin-top:6px">
+      <button data-action="practice" data-axis="r" ${state.pendingSab?"disabled":""}>練習：縦 +${gainR}</button>
+      <button data-action="practice" data-axis="m" ${state.pendingSab?"disabled":""}>練習：横 +${gainM}</button>
+      ${paWarn}${lockWarn}
+      ${canScout?"":'<span class="note" style="align-self:center">バンド満員（6人）。練習のみ。</span>'}
+    </div>
+    <div class="sab"><span class="lbl">妨害カード（手番に1枚）:</span>${sabBtns||'<span class="lbl">なし</span>'} ${headh}</div>
+
+    ${renderScorePreview()}
+
+    <h2><span class="dot bg-m"></span>対戦相手</h2>
+    ${opp}
+
+    <div class="log">${state.log.slice(-10).map(l=>`<div class="${l.cls}">${l.t}</div>`).join("")}</div>
+    <div class="row" style="margin-top:10px"><button class="ghost" data-action="quit">セットアップに戻る</button></div>`;
+}
+
+function renderAudition(){
+  const R=state.results;
+  const ranks=["🥇","🥈","🥉","4位","5位"];
+  const sortedTotal=[...state.bands].sort((a,b)=>{
+    const ta=R.totals.find(t=>t.seat===a.seat).total,tb=R.totals.find(t=>t.seat===b.seat).total;
+    return tb-ta;
+  });
+  const rankMap={};sortedTotal.forEach((b,i)=>rankMap[b.seat]=i);
+
+  const head=`<tr>
+    <th class="l">バンド</th>
+    <th><span class="r">縦</span></th><th><span class="m">横</span></th><th><span class="h">高</span></th>
+    <th>1曲目<br><span style="font-weight:500;font-size:10px">高×${CONFIG.song1.h}+横×${CONFIG.song1.m}</span></th>
+    <th>2曲目<br><span style="font-weight:500;font-size:10px">縦×${CONFIG.song2.r}+横×${CONFIG.song2.m}</span></th>
+    <th>順位点</th><th>合計</th><th>順位</th></tr>`;
+
+  const rows=state.bands.map(b=>{
+    const P=R.bases[b.seat],bd=R.breakdowns[b.seat];
+    const s1=R.s1.find(x=>x.seat===b.seat),s2=R.s2.find(x=>x.seat===b.seat);
+    const pts=(R.p1[b.seat]||0)+(R.p2[b.seat]||0);
+    const win=R.winner===b.seat,rank=rankMap[b.seat];
+    const srcR=`基礎${bd.base.r}+練習${bd.practice.r}+スキル${bd.skill.r}`;
+    const srcM=`基礎${bd.base.m}+練習${bd.practice.m}+スキル${bd.skill.m}`;
+    const srcH=`基礎${bd.base.h}+種類${bd.variety}+スキル${bd.skill.h}${bd.stoic?"+ストイック"+bd.stoic:""}`;
+    return `<tr class="${win?"win":""}">
+      <td class="l">${b.name}${win?" 🏆":""}<br>
+        <span class="muted" style="font-size:10px">${INST[b.instrument].label}・${LEAD[b.leader].n}・${b.you?"あなた":b.archetype}</span></td>
+      <td class="r">${P.r}<br><span class="src">${srcR}</span></td>
+      <td class="m">${P.m}<br><span class="src">${srcM}</span></td>
+      <td class="h">${P.h}<br><span class="src">${srcH}</span></td>
+      <td>${s1.score}${s1.trig?` <span class="muted">(本番×)</span>`:""}<br><span class="muted" style="font-size:10px">${R.p1[b.seat]||0}点</span></td>
+      <td>${s2.score}${s2.trig?` <span class="muted">(本番×)</span>`:""}<br><span class="muted" style="font-size:10px">${R.p2[b.seat]||0}点</span></td>
+      <td>${R.p1[b.seat]||0}+${R.p2[b.seat]||0}</td>
+      <td><b>${pts}</b></td>
+      <td>${ranks[rank]||rank+1+"位"}</td>
+    </tr>`;
+  }).join("");
+
+  let enc="";
+  if(R.encore)enc=`<div class="panel">同点 → <b>アンコール（横勝負）</b>：${R.encore.map(e=>`${state.bands[e.seat].name} 横${e.mel}`).join(" / ")} → <b>${state.bands[R.winner].name}</b> の勝ち</div>`;
+  const winNm=state.bands[R.winner].name;
+  const youWon=R.winner===0;
+
+  const cfg=`<div class="panel cfg">
+    <b>数値を変えて再戦</b>
+    <div class="grid2" style="margin-top:6px">
+      <label>練習の伸び <input id="c_pg" type="number" value="${CONFIG.practiceGain}"></label>
+      <label>種類数ボーナス係数 <input id="c_vc" type="number" value="${CONFIG.varietyCoef}"></label>
+      <label>1曲目 高さ× <input id="c_s1h" type="number" value="${CONFIG.song1.h}"></label>
+      <label>1曲目 横× <input id="c_s1m" type="number" value="${CONFIG.song1.m}"></label>
+      <label>2曲目 縦× <input id="c_s2r" type="number" value="${CONFIG.song2.r}"></label>
+      <label>2曲目 横× <input id="c_s2m" type="number" value="${CONFIG.song2.m}"></label>
+      <label>本番×の確率 <input id="c_sf" type="number" step="0.05" value="${CONFIG.stageFrightProb}"></label>
+      <label>手番数 <input id="c_t" type="number" value="${CONFIG.turns}"></label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="big" data-action="apply">この設定で新ゲーム</button>
+      <button class="big ghost" data-action="same">同じseedで作り直す<br><span style="font-size:10px;font-weight:500">（相手構成を固定して数値だけ比較）</span></button>
+    </div>
+    <div class="note">「同じseedで〜」を使うと、デッキ・相手・本番×の出目が固定され、数値の影響だけを見比べられます（あなたの手は打ち直し）。</div>
+  </div>`;
+
+  return `<div class="banner"><span class="t">結果発表 🎤</span><span>${youWon?"🎉 あなたの勝ち！":"優勝："+winNm}</span></div>
+    <table>${head}${rows}</table>
+    ${enc}
+    <div class="row" style="margin-top:12px">
+      <button class="big" data-action="again">もう一度（同じ設定）</button>
+      <button class="big ghost" data-action="quit">セットアップ</button>
+    </div>
+    ${cfg}`;
+}
+
+/* ====== events ====== */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-action]");if(!t)return;
+  const a=t.dataset.action;
+
+  if(state.phase==="setup"){
+    if(a==="count"){state.setup.count=+t.dataset.n;render();}
+    else if(a==="inst"){state.setup.instrument=t.dataset.k;render();}
+    else if(a==="lead"){state.setup.leader=t.dataset.k;render();}
+    else if(a==="reroll"){
+      const lc=LEAD_KEYS.slice();shuffle(lc);
+      state.setup.leaderChoices=[lc[0],lc[1]];state.setup.leader=null;
+      state.setup.open=OPEN_KEYS[Math.floor(state.rng()*OPEN_KEYS.length)];render();
+    }
+    else if(a==="start"){startGame();}
+    return;
+  }
+
+  if(state.phase==="play"){
+    const you=state.bands[0];
+    // detail modal controls (可能な限り早く処理してreturn)
+    if(a==="opendetail"){
+      const mid=parseInt(t.dataset.mid,10);
+      state.detailCard=(state.detailCard===mid?null:mid);
+      renderModal();return;
+    }
+    if(a==="closedetail"){state.detailCard=null;renderModal();return;}
+    if(a==="scout-from-modal"){
+      const mem=state.market.find(m=>m.id==t.dataset.mid);
+      if(mem&&size(you)<CONFIG.bandCap){state.detailCard=null;scout(you,mem);endPlayerTurn();}
+      return;
+    }
+    if(a==="scout"){
+      if(state.pendingSab)return;
+      const mem=state.market.find(m=>m.id==t.dataset.mid);
+      if(mem&&size(you)<CONFIG.bandCap){scout(you,mem);endPlayerTurn();}
+    }
+    else if(a==="practice"){if(state.pendingSab)return;practice(you,t.dataset.axis);endPlayerTurn();}
+    else if(a==="sab"){const c=t.dataset.card;state.pendingSab=(state.pendingSab===c?null:c);render();}
+    else if(a==="cancelsab"){state.pendingSab=null;render();}
+    else if(a==="sabtarget"){
+      const seat=+t.dataset.seat;state.bands[seat].lockNext=true;
+      consumeSab("studio_lockout");
+      log(`あなたが${state.bands[seat].name}にスタジオ確保`,"sab");
+      showToast(`${state.bands[seat].name}にスタジオ確保！`,"t-sab");
+      state.pendingSab=null;render();
+    }
+    else if(a==="peek"){
+      const mem=state.market.find(m=>m.id==t.dataset.mid);if(!mem)return;
+      if(state.pendingSab==="backstage_peek"){mem.peeked=true;consumeSab("backstage_peek");state.pendingSab=null;}
+      else if(state.headhunterLeft>0){mem.peeked=true;state.headhunterLeft--;}
+      render();
+    }
+    else if(a==="quit"){newSetup();}
+    return;
+  }
+
+  if(state.phase==="audition"){
+    if(a==="again"){startGame();}
+    else if(a==="quit"){newSetup();}
+    else if(a==="apply"||a==="same"){readConfig();startGame(a==="same"?state.seed:null);}
+    return;
+  }
+});
+
+/* BUG FIX: スナイプハンドラ — data-mid が .mem に常にあるのでID照合が確実
+   ボタンクリックは無視してカード本体のクリックのみ反応させる */
+document.addEventListener("click",e=>{
+  if(state.phase!=="play"||state.pendingSab!=="snipe")return;
+  if(e.target.tagName==="BUTTON")return; // ボタン（詳細・覗など）は無視
+  const memEl=e.target.closest(".mem");if(!memEl)return;
+  const id=parseInt(memEl.dataset.mid,10);if(isNaN(id))return;
+  if(state.reserved&&state.reserved!==id)return;
+  const mem=state.market.find(m=>m.id===id);if(!mem)return;
+  state.reserved=id;
+  consumeSab("snipe");
+  log(`あなたが${mem.name}（${INST[mem.instrument].label}）を横取り予約`,"sab");
+  showToast(`${mem.name}を横取り予約！`,"t-sab");
+  state.pendingSab=null;render();
+});
+
+function consumeSab(card){const you=state.bands[0];const i=you.sabotage.indexOf(card);if(i>=0)you.sabotage.splice(i,1);}
+
+function readConfig(){
+  const g=id=>document.getElementById(id);if(!g("c_pg"))return;
+  CONFIG.practiceGain=+g("c_pg").value;CONFIG.varietyCoef=+g("c_vc").value;
+  CONFIG.song1={h:+g("c_s1h").value,m:+g("c_s1m").value};
+  CONFIG.song2={r:+g("c_s2r").value,m:+g("c_s2m").value};
+  CONFIG.stageFrightProb=+g("c_sf").value;CONFIG.turns=+g("c_t").value;
+}
+
+newSetup();
+</script>
+</body>
+</html>
