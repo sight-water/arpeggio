@@ -183,6 +183,44 @@ td.l,th.l{text-align:left;}
 tr.win td{background:#F3ECDC;font-weight:900;}
 .note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px;}
 
+/* ===== roulette ===== */
+.roulette-box{text-align:center;padding:20px 16px 10px;}
+.roulette-slot{display:inline-flex;align-items:center;justify-content:center;
+  font-family:"RocknRoll One";font-size:42px;min-width:220px;height:76px;
+  background:var(--card);border:3px solid var(--line);border-radius:12px;margin-bottom:10px;}
+.roulette-slot.spinning{border-color:var(--accent);animation:slotBounce .12s ease-in-out infinite;}
+.roulette-slot.done{border-color:var(--accent);color:var(--accent);}
+@keyframes slotBounce{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.07);}}
+.roulette-sub{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.order-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0 2px;}
+.order-chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;
+  background:var(--card);border:1.5px solid var(--line);}
+.order-chip.you{background:#F3ECDC;border-color:var(--accent);color:var(--accent);}
+.draft-row.you-row{background:#F3ECDC;border-radius:4px;padding:6px 8px;}
+
+/* ===== bot action banner ===== */
+.bot-banner{position:fixed;top:0;left:0;right:0;z-index:500;
+  background:rgba(26,22,18,.93);color:#e8ddc9;padding:10px 16px;
+  display:flex;align-items:center;gap:12px;
+  animation:banSlide .22s ease-out;}
+@keyframes banSlide{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+.ban-ico{font-size:24px;width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ban-who{font-size:10px;font-weight:700;color:#9ec4a0;margin-bottom:1px;}
+.ban-act{font-family:"RocknRoll One";font-size:15px;line-height:1.2;}
+.ban-sub{font-size:11px;color:rgba(232,220,201,.6);margin-top:1px;}
+.ban-prog{height:2px;background:rgba(255,255,255,.12);margin-top:7px;border-radius:1px;overflow:hidden;}
+.ban-fill{height:100%;background:rgba(255,255,255,.45);border-radius:1px;}
+
+/* ===== band member chips ===== */
+.bmems{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;}
+.bmem{font-size:10.5px;border:1px solid var(--line);border-radius:8px;
+  padding:2px 7px;background:var(--paper);line-height:1.5;}
+.bmem.you-mem{background:#F3ECDC;border-color:#c9a870;}
+.bmem .bi{font-weight:700;}
+.bmem .bsk{color:var(--muted);}
+.bmem .bsk.risk{color:var(--r);font-weight:700;}
+
 @media(max-width:560px){.mem{width:calc(50% - 4px);}.race-wrap{grid-template-columns:1fr;}.top-panels{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -289,9 +327,10 @@ function goDraft(){
     phase:"draft", seed, rng:mulberry32(seed),
     playerCount:s.count,
     judgeCards:[],
-    draftInsts:{},   // {seat: instrumentKey}
+    draftInsts:{},
     botArchetypes:{},
     lastSetup:s,
+    spinPhase:"idle",spinCurrentInst:null,spinFrames:[],spinFrameIdx:0,spinResult:null,
   };
   const jk=[...JUDGE_KEYS]; shuffle(jk);
   state.judgeCards=[jk[0],jk[1]];
@@ -333,7 +372,7 @@ function startGame(){
     tokenPool:{r:poolSize(d.playerCount),m:poolSize(d.playerCount)},
     judgeCards:d.judgeCards,
     log:[],detailCard:null,lastAction:null,scoutReveal:null,
-    peekUsed:false,peekMode:false,
+    peekUsed:false,peekMode:false,botBanner:null,
     bands:[],deck:[],market:[],results:null,
     lastSetup:d.lastSetup,
     botArchetypes:d.botArchetypes,
@@ -525,11 +564,22 @@ function doPractice(b,axis){
 
 function endPlayerTurn(){
   state.peekMode=false;
-  // ドラフト逆順でボット（最後に選んだボットが先に手番）
-  for(let s=state.playerCount-1;s>=1;s--) applyBot(state.bands[s]);
+  const actions=[];
+  for(let s=state.playerCount-1;s>=1;s--){
+    const b=state.bands[s];
+    const prevMC=b.members.length,prevR=b.tokens.r,prevM=b.tokens.m;
+    applyBot(b);
+    if(b.members.length>prevMC)
+      actions.push({type:"scout",band:b,mem:b.members[b.members.length-1]});
+    else if(b.tokens.r>prevR)
+      actions.push({type:"practice",band:b,axis:"r",gain:b.tokens.r-prevR});
+    else if(b.tokens.m>prevM)
+      actions.push({type:"practice",band:b,axis:"m",gain:b.tokens.m-prevM});
+  }
   state.round++;
   if(state.round>=CONFIG.turns){runAudition();return;}
-  render();
+  if(actions.length) showBotBanners(actions,0);
+  else render();
 }
 
 /* ====== BOT ====== */
@@ -574,6 +624,69 @@ function applyBot(b){
   if(state.tokenPool[other]>0) doPractice(b,other);
 }
 
+/* ====== ROULETTE ====== */
+function startSpin(){
+  if(state.spinPhase!=="idle") return;
+  const result=INST_KEYS[Math.floor(state.rng()*INST_KEYS.length)];
+  const fakes=[];
+  for(let i=0;i<20;i++) fakes.push(INST_KEYS[Math.floor(Math.random()*INST_KEYS.length)]);
+  fakes.push(result,result,result);
+  state.spinFrames=fakes;state.spinFrameIdx=0;state.spinResult=result;
+  state.spinPhase="spinning";state.spinCurrentInst=fakes[0];
+  render();
+  setTimeout(nextSpinFrame,60);
+}
+function nextSpinFrame(){
+  if(state.spinPhase!=="spinning") return;
+  const idx=++state.spinFrameIdx;
+  const total=state.spinFrames.length;
+  if(idx>=total){state.spinPhase="done";selectInstrument(state.spinResult);return;}
+  state.spinCurrentInst=state.spinFrames[idx];
+  render();
+  const pct=idx/total;
+  const delay=pct<0.45?65:pct<0.7?110:pct<0.85?190:pct<0.95?310:420;
+  setTimeout(nextSpinFrame,delay);
+}
+
+/* ====== BOT BANNER ====== */
+function renderBotBanner(){
+  if(!state.botBanner) return'';
+  const{ico,title,sub,progress}=state.botBanner;
+  return`<div class="bot-banner">
+    <div class="ban-ico">${ico}</div>
+    <div style="flex:1;min-width:0">
+      <div class="ban-who">${title.replace(/が.*$/,"")}</div>
+      <div class="ban-act">${title}</div>
+      <div class="ban-sub">${sub}</div>
+      <div class="ban-prog"><div class="ban-fill" id="ban-fill" style="width:${progress||0}%"></div></div>
+    </div>
+  </div>`;
+}
+function showBotBanners(actions,idx){
+  if(idx>=actions.length){state.botBanner=null;render();return;}
+  const a=actions[idx];
+  let ico,title,sub;
+  if(a.type==="scout"){
+    ico="🎸";title=a.band.name+"がスカウト！";
+    sub=a.mem.name+"（"+INST[a.mem.instrument].label+"）を加入";
+  } else {
+    ico=a.axis==="r"?"🥁":"🎵";title=a.band.name+"が練習";
+    sub=(a.axis==="r"?"縦":"横")+" +"+a.gain+"トークン";
+  }
+  state.botBanner={ico,title,sub,progress:0};
+  render();
+  const start=Date.now(),dur=1400;
+  function tick(){
+    const p=Math.min(100,(Date.now()-start)/dur*100);
+    const el=document.getElementById("ban-fill");
+    if(el) el.style.width=p+"%";
+    state.botBanner.progress=p;
+    if(p<100) requestAnimationFrame(tick);
+    else showBotBanners(actions,idx+1);
+  }
+  requestAnimationFrame(tick);
+}
+
 /* ====== UI HELPERS ====== */
 function skillEffectInfo(skillKey,mem,sz,hasR){
   const pri=primary(mem.instrument);
@@ -590,6 +703,18 @@ function skillEffectInfo(skillKey,mem,sz,hasR){
   return{cls:"inactive",txt:""};
 }
 function pwStr(P){return`<span class="r">縦${P.r}</span> <span class="m">横${P.m}</span> <span class="h">高${P.h}</span>`;}
+function membChips(b,revealClosed){
+  const isSelf=b.you;
+  const selfChip=`<span class="bmem${isSelf?' you-mem':''}"><span class="bi">（${isSelf?"自分":b.name}）${INST[b.instrument].label}</span></span>`;
+  const mems=b.members.map(m=>{
+    const c=SKILLS[m.closed];
+    const closedHtml=revealClosed
+      ?`<span class="bsk${c.risk?' risk':''}"> 隠:${c.n}</span>`
+      :`<span class="bsk muted"> 隠:？</span>`;
+    return`<span class="bmem${isSelf?' you-mem':''}"><span class="bi">${m.name}・${INST[m.instrument].label}</span><span class="bsk"> 表:${SKILLS[m.open].n}</span>${closedHtml}</span>`;
+  });
+  return`<div class="bmems">${selfChip}${mems.join('')}</div>`;
+}
 function costStr(inst){
   const c=CONFIG.costs[inst];const parts=[];
   if(c.r>0) parts.push(`<span class="r">縦×${c.r}</span>`);
@@ -656,38 +781,44 @@ function renderSetup(){
 }
 
 function renderDraft(){
+  const phase=state.spinPhase||"idle";
   const playerPicked=state.draftInsts[0]!=null;
-  const takenSet=new Set(Object.values(state.draftInsts));
   const archNames={wide:"大編成型",narrow:"少数精鋭型",balanced:"バランス型",random:"ランダム型"};
 
-  const instBtns=INST_KEYS.map(k=>{
-    const takenByBot=takenSet.has(k)&&state.draftInsts[0]!==k;
-    const selected=state.draftInsts[0]===k;
-    return`<button class="${selected?"sel":""}" data-action="selectinst" data-k="${k}"
-      ${takenByBot||selected?"disabled":""}>
-      ${INST[k].label}<br>
-      <span style="font-size:10px;font-weight:500">縦${INST[k].r} 横${INST[k].m} 高${INST[k].h}</span>
-      ${takenByBot?'<br><span style="font-size:9px">取得済み</span>':""}
-    </button>`;
-  }).join("");
-
-  // ドラフト結果
-  const draftRows=Array.from({length:state.playerCount},(_,i)=>{
-    const inst=state.draftInsts[i];
-    const label=i===0?"あなた":`相手${String.fromCharCode(64+i)}（${archNames[state.botArchetypes[i]]||""}）`;
-    return`<div class="draft-row">
-      <span class="draft-seat">${label}</span>
-      <span class="draft-inst ${inst?"picked":""}">
-        ${inst?INST[inst].label+"（縦"+INST[inst].r+" 横"+INST[inst].m+" 高"+INST[inst].h+"）":"待機中..."}
-      </span>
+  let rouletteSection;
+  if(phase==="idle"){
+    rouletteSection=`<div class="roulette-box">
+      <div class="roulette-slot">？</div>
+      <div class="roulette-sub">ルーレットで楽器が決まります</div>
+      <button class="big" data-action="spin">🎲 ルーレットを回す！</button>
     </div>`;
-  }).join("");
-
-  // 手番順の説明
-  const orderNote=playerPicked?`<div class="turn-order-note">
-    ドラフト順：あなた → ${Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(65+i)).join(" → ")}<br>
-    ゲームの手番順（逆）：${Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(64+state.playerCount-i-1)).join(" → ")} → あなた
-  </div>`:"";
+  } else if(phase==="spinning"){
+    const cur=state.spinCurrentInst||"guitar";
+    rouletteSection=`<div class="roulette-box">
+      <div class="roulette-slot spinning">${INST[cur].label}</div>
+      <div class="roulette-sub" style="color:var(--accent)">🎲 抽選中…</div>
+    </div>`;
+  } else {
+    const myInst=state.draftInsts[0];
+    const draftRows=Array.from({length:state.playerCount},(_,i)=>{
+      const inst=state.draftInsts[i];
+      const lbl=i===0?"あなた":`相手${String.fromCharCode(64+i)}（${archNames[state.botArchetypes[i]]||""}）`;
+      return`<div class="draft-row${i===0?" you-row":""}">
+        <span class="draft-seat">${lbl}</span>
+        <span class="draft-inst picked">${inst?INST[inst].label+"　縦"+INST[inst].r+" 横"+INST[inst].m+" 高"+INST[inst].h:"？"}</span>
+      </div>`;
+    }).join("");
+    const turnOrder=[...Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(64+state.playerCount-1-i)),"あなた"];
+    rouletteSection=`<div class="roulette-box">
+      <div class="roulette-slot done">${INST[myInst].label}</div>
+      <div class="roulette-sub" style="color:var(--accent)">あなたの楽器が決まりました！</div>
+    </div>
+    <div class="draft-section">${draftRows}</div>
+    <div class="turn-order-note" style="margin-top:8px">
+      <b>手番順（早い順）：</b>
+      <div class="order-row">${turnOrder.map((n,i)=>`<span class="order-chip${n==="あなた"?" you":""}">${i+1}. ${n}</span>`).join("")}</div>
+    </div>`;
+  }
 
   const startBtn=playerPicked?`<button class="big" data-action="startgame">ゲームを始める →</button>`:"";
 
@@ -702,11 +833,9 @@ function renderDraft(){
       </div>`).join("")}
     </div>
 
-    <h2 style="margin-top:14px"><span class="dot bg-r"></span>楽器を選択（同じ楽器は選べません）</h2>
-    <div class="row">${instBtns}</div>
-    <div class="draft-section" style="margin-top:10px">${draftRows}</div>
-    ${orderNote}
-    <div class="row" style="margin-top:12px">${startBtn}</div>`;
+    <h2 style="margin-top:14px"><span class="dot bg-r"></span>楽器ルーレット</h2>
+    ${rouletteSection}
+    <div class="row" style="margin-top:14px">${startBtn}</div>`;
 }
 
 function renderJudge(){
@@ -787,11 +916,11 @@ function renderPlay(){
         <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
         <div class="pw">${pwStr(bp)}</div>
       </div>
-      <div style="font-size:11px;color:var(--muted)">${b.members.map(m=>m.name+"・"+INST[m.instrument].label).join(" / ")||"なし"}</div>
+      ${membChips(b,false)}
     </div>`;
   }).join("");
 
-  return`<div class="banner ${isLast?"last":""}">
+  return`${renderBotBanner()}<div class="banner ${isLast?"last":""}">
     <div style="flex:1">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span class="t">${isLast?"⚠ ラスト手番！":"手番"} ${turnNo} / ${CONFIG.turns}</span>
@@ -821,13 +950,7 @@ function renderPlay(){
       <span><span class="nm">あなた</span> <span class="lead">${INST[you.instrument].label}・${bSize(you)}/${CONFIG.bandCap}人</span></span>
       <div class="pw">${pwStr(P)}</div>
     </div>
-    <div class="chips">
-      <span class="chip you">（自分:${INST[you.instrument].label}）</span>
-      ${you.members.map(m=>{
-        const c=SKILLS[m.closed];
-        return`<span class="chip you">${m.name}・${INST[m.instrument].label}・${SKILLS[m.open].n}・<b class="${c.risk?"risk":""}">${c.n}</b></span>`;
-      }).join("")||'<span class="muted" style="font-size:11px">メンバーなし</span>'}
-    </div>
+    ${membChips(you,true)}
   </div>
 
   <div class="studio-row" style="margin-top:8px;align-items:stretch;gap:8px;display:flex;flex-wrap:wrap;">
@@ -948,9 +1071,7 @@ function renderAudition(){
         <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
         <div class="pw">${pwStr(P)}</div>
       </div>
-      <p style="font-size:11px;margin-top:4px;color:var(--muted)">
-        ${b.members.map(m=>`${m.name}（${INST[m.instrument].label}）表:${SKILLS[m.open].n} 隠:${SKILLS[m.closed].n}`).join("　")||"メンバーなし"}
-      </p>
+      ${membChips(b,true)}
     </div>`;
   }).join("");
 
@@ -1010,6 +1131,7 @@ document.addEventListener("click",e=>{
   if(act==="count"){state.setup.count=+el.dataset.n;render();return;}
   if(act==="godraft"){goDraft();return;}
   // draft
+  if(act==="spin"){startSpin();return;}
   if(act==="selectinst"){selectInstrument(el.dataset.k);return;}
   if(act==="startgame"){startGame();return;}
   // reset
