@@ -176,6 +176,37 @@ button.big{padding:10px 18px;font-size:14px;}
 .toast.t-warn{background:var(--warn);color:#fff;}
 @keyframes chipIn{from{opacity:0;transform:scale(.7) translateY(6px);}to{opacity:1;transform:none;}}
 
+/* ===== audition reveal ===== */
+@keyframes revealPop{from{opacity:0;transform:scale(.85) translateY(14px);}to{opacity:1;transform:none;}}
+@keyframes revealSlide{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes progFill{from{width:0%;}to{width:100%;}}
+.aud-stage{padding:4px 0;}
+.aud-opener{text-align:center;padding:48px 0 32px;}
+.aud-big-title{font-family:"RocknRoll One";font-size:40px;letter-spacing:6px;color:var(--accent);animation:revealPop .7s ease both;}
+.aud-big-sub{font-size:13px;color:var(--muted);margin:10px 0 28px;}
+.aud-step-ttl{font-size:16px;font-weight:900;margin:12px 0 10px;animation:revealPop .4s ease both;}
+.aud-cards{display:grid;gap:8px;margin-bottom:8px;}
+.aud-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;}
+.aud-card.you-card{border-color:var(--h);}
+.aud-card.win-card{border-color:gold;background:#18160a;}
+.aud-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.aud-card-name{font-weight:900;font-size:14px;}
+.aud-card-sub{font-size:11px;color:var(--muted);}
+.aud-row{font-size:12px;padding:4px 0;border-top:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.aud-row.reveal-in{animation:revealSlide .35s ease both;}
+.aud-lbl{color:var(--muted);font-size:11px;min-width:44px;}
+.aud-plus{color:#2E7D6B;font-weight:700;}
+.aud-minus{color:#BE4A2C;font-weight:700;}
+.aud-rank{display:inline-block;padding:0 6px;border-radius:8px;font-size:10px;font-weight:700;margin:0 2px;}
+.rank-1{background:#f5c842;color:#000;}.rank-2{background:#c0c0c0;color:#000;}
+.rank-3{background:#cd7f32;color:#fff;}.rank-x{background:var(--border);color:var(--muted);}
+.aud-prog-wrap{height:3px;background:var(--border);border-radius:2px;margin:8px 0 4px;overflow:hidden;}
+.aud-prog-fill{height:100%;background:var(--accent);animation:progFill linear both;}
+.aud-skip{font-size:11px;color:var(--muted);cursor:pointer;background:none;border:none;padding:2px 0;text-decoration:underline;}
+.aud-winner{text-align:center;padding:16px 0 8px;animation:revealPop .8s ease both;}
+.aud-winner-you{font-size:22px;font-weight:900;color:var(--accent);}
+.aud-winner-name{font-size:26px;font-weight:900;color:gold;text-shadow:0 0 20px rgba(255,200,0,.4);}
+
 table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12px;}
 th,td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--line2);}
 th{font-weight:900;border-bottom:1.5px solid var(--line);}
@@ -522,8 +553,19 @@ function judgeBonus(band,s1rank,s2rank){
 }
 
 function runAudition(){
-  const s1=state.bands.map(b=>({seat:b.seat,score:songScore(b,CONFIG.song1)}));
-  const s2=state.bands.map(b=>({seat:b.seat,score:songScore(b,CONFIG.song2)}));
+  // closedSkillDelta uses RNG — compute once per band per song, preserving order
+  const s1details=state.bands.map(b=>{
+    const base=basePowers(b),open=openSkillDelta(b),closed=closedSkillDelta(b);
+    const f={r:base.r+open.r+closed.r,m:base.m+open.m+closed.m,h:base.h+open.h+closed.h};
+    return{seat:b.seat,base,open,closed,score:Math.round(CONFIG.song1.r*f.r+CONFIG.song1.m*f.m+CONFIG.song1.h*f.h)};
+  });
+  const s2details=state.bands.map(b=>{
+    const base=basePowers(b),open=openSkillDelta(b),closed=closedSkillDelta(b);
+    const f={r:base.r+open.r+closed.r,m:base.m+open.m+closed.m,h:base.h+open.h+closed.h};
+    return{seat:b.seat,base,open,closed,score:Math.round(CONFIG.song2.r*f.r+CONFIG.song2.m*f.m+CONFIG.song2.h*f.h)};
+  });
+  const s1=s1details.map(d=>({seat:d.seat,score:d.score}));
+  const s2=s2details.map(d=>({seat:d.seat,score:d.score}));
   const p1=makePlacement(s1),p2=makePlacement(s2);
   const s1s=[...s1].sort((a,b)=>b.score-a.score);
   const s2s=[...s2].sort((a,b)=>b.score-a.score);
@@ -544,8 +586,19 @@ function runAudition(){
     const mt=ms.filter(x=>x.mel===mx);
     winner=mt[Math.floor(state.rng()*mt.length)].seat;
   }
-  state.results={s1,s2,p1,p2,totals,winner};
+  state.results={s1,s2,p1,p2,totals,winner,s1details,s2details,revealStep:0};
   state.phase="audition";render();
+}
+
+function advanceReveal(){
+  if(state.phase!=="audition"||!state.results) return;
+  if(state.results.revealStep>=6) return;
+  state.results.revealStep++;
+  render();
+  // auto-advance delays per step (0=manual, then ms per step)
+  const delays=[0, 3000, 3000, 3500, 3500, 2500, 0];
+  const d=delays[state.results.revealStep];
+  if(d) setTimeout(advanceReveal,d);
 }
 
 /* ====== ACTIONS ====== */
@@ -1141,49 +1194,138 @@ function renderDetailModal(mem,band){
 
 function renderAudition(){
   const r=state.results;
-  const winner=state.bands[r.winner];
-  const isYouWin=r.winner===0;
+  const step=r.revealStep;
 
-  const rows=state.bands.map(b=>{
-    const s1=r.s1.find(x=>x.seat===b.seat).score;
-    const s2=r.s2.find(x=>x.seat===b.seat).score;
-    const tot=r.totals.find(x=>x.seat===b.seat);
-    return`<tr class="${b.seat===r.winner?"win":""}">
-      <td class="l">${b.name}</td>
-      <td>${s1}</td><td>${r.p1[b.seat]??0}</td>
-      <td>${s2}</td><td>${r.p2[b.seat]??0}</td>
-      <td>${tot.jb>0?"+"+tot.jb:"—"}</td>
-      <td><b>${tot.total}</b></td>
-      <td>${b.seat===r.winner?"🏆":""}</td>
-    </tr>`;
-  }).join("");
-
-  const bandDetails=state.bands.map(b=>{
-    const P=projPowers(b);
-    return`<div class="band${b.you?" you":""}">
-      <div class="top">
-        <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
-        <div class="pw">${pwStr(P)}</div>
+  // Step 0: Opening
+  if(step===0){
+    return`<div class="aud-stage">
+      <div class="aud-opener">
+        <div class="aud-big-title">🎸 AUDITION</div>
+        <div class="aud-big-sub">${state.playerCount}バンド・${CONFIG.turns}手番の戦いが終わった</div>
+        <button class="big" style="font-size:15px;letter-spacing:2px;padding:14px 32px" data-action="reveal-next">
+          ▶　開幕！
+        </button>
       </div>
-      ${membChips(b,true)}
+    </div>`;
+  }
+
+  // helpers
+  const an=(n)=>step===n?"reveal-in":""; // animate only when first revealed
+  const dv=(n)=>n>0?`<b class="aud-plus">+${n}</b>`:n<0?`<b class="aud-minus">${n}</b>`:`<span style="color:var(--muted)">±0</span>`;
+  const rc=(rank)=>{
+    const cls=["rank-1","rank-2","rank-3","rank-x"][Math.min(rank,3)];
+    return`<span class="aud-rank ${cls}">${rank+1}位</span>`;
+  };
+  const s1ranks=[...r.s1].sort((a,b)=>b.score-a.score);
+  const s2ranks=[...r.s2].sort((a,b)=>b.score-a.score);
+
+  const cards=state.bands.map((b,bi)=>{
+    const d1=r.s1details.find(d=>d.seat===b.seat);
+    const d2=r.s2details.find(d=>d.seat===b.seat);
+    const tot=r.totals.find(t=>t.seat===b.seat);
+    const r1=s1ranks.findIndex(x=>x.seat===b.seat);
+    const r2=s2ranks.findIndex(x=>x.seat===b.seat);
+    const isWin=b.seat===r.winner;
+    const delay=`animation-delay:${bi*90}ms`;
+
+    // step1: base powers
+    const baseRow=step>=1?`<div class="aud-row ${an(1)}" style="${delay}">
+      <span class="aud-lbl">基礎</span>
+      <span class="r">縦${d1.base.r}</span>&nbsp;<span class="m">横${d1.base.m}</span>&nbsp;<span class="h">高${d1.base.h}</span>
+    </div>`:"";
+
+    // step2: open skill delta
+    const sk={r:d1.open.r,m:d1.open.m,h:d1.open.h};
+    const skRow=step>=2?`<div class="aud-row ${an(2)}" style="${delay}">
+      <span class="aud-lbl">スキル</span>
+      ${dv(sk.r)}<span class="aud-lbl">縦</span>
+      ${dv(sk.m)}<span class="aud-lbl">横</span>
+      ${dv(sk.h)}<span class="aud-lbl">高</span>
+    </div>`:"";
+
+    // step3: Song1 (closed delta may show stage_weak effect)
+    const cl1={r:d1.closed.r,m:d1.closed.m,h:d1.closed.h};
+    const cl1tag=(cl1.r||cl1.m||cl1.h)?`<span style="font-size:10px;color:var(--muted);margin-left:4px">隠${cl1.r?dv(cl1.r)+"縦":""}${cl1.m?dv(cl1.m)+"横":""}${cl1.h?dv(cl1.h)+"高":""}</span>`:"";
+    const s1Row=step>=3?`<div class="aud-row ${an(3)}" style="${delay}">
+      <span class="aud-lbl">Song1</span>${cl1tag}
+      <b>${d1.score}点</b>${rc(r1)}<span class="aud-lbl">→</span><b>${r.p1[b.seat]??0}pt</b>
+    </div>`:"";
+
+    // step4: Song2
+    const cl2={r:d2.closed.r,m:d2.closed.m,h:d2.closed.h};
+    const cl2tag=(cl2.r||cl2.m||cl2.h)?`<span style="font-size:10px;color:var(--muted);margin-left:4px">隠${cl2.r?dv(cl2.r)+"縦":""}${cl2.m?dv(cl2.m)+"横":""}${cl2.h?dv(cl2.h)+"高":""}</span>`:"";
+    const s2Row=step>=4?`<div class="aud-row ${an(4)}" style="animation-delay:${bi*90+40}ms">
+      <span class="aud-lbl">Song2</span>${cl2tag}
+      <b>${d2.score}点</b>${rc(r2)}<span class="aud-lbl">→</span><b>${r.p2[b.seat]??0}pt</b>
+    </div>`:"";
+
+    // step5: judge bonus
+    const jbRow=step>=5?`<div class="aud-row ${an(5)}" style="${delay}">
+      <span class="aud-lbl">審査員</span>
+      ${tot.jb>0?`<b class="aud-plus">+${tot.jb}pt</b>`:`<span style="color:var(--muted)">なし</span>`}
+    </div>`:"";
+
+    // step6: total
+    const totRow=step>=6?`<div class="aud-row ${an(6)}" style="animation-delay:${bi*100}ms;font-size:14px;font-weight:900;border-top:2px solid var(--border);margin-top:2px">
+      <span class="aud-lbl">合計</span>
+      <span style="font-size:17px">${tot.total}pt</span>
+      ${isWin?`<span style="color:gold;margin-left:6px;font-size:16px">🏆</span>`:""}
+    </div>`:"";
+
+    return`<div class="aud-card${b.you?" you-card":""}${isWin&&step>=6?" win-card":""}">
+      <div class="aud-card-head">
+        <span class="aud-card-name">${b.you?"あなた":b.name}</span>
+        <span class="aud-card-sub">${INST[b.instrument].label}・${bSize(b)}人</span>
+      </div>
+      ${baseRow}${skRow}${s1Row}${s2Row}${jbRow}${totRow}
     </div>`;
   }).join("");
 
-  return`<div class="banner" style="${isYouWin?"background:#1a5c3a":""}">
-    <div class="t">${isYouWin?"🎸 あなたの優勝！":"優勝："+winner.name}</div>
-  </div>
-  <h2>オーディション結果</h2>
-  <table>
-    <tr><th class="l">バンド</th><th>Song1</th><th>pt</th><th>Song2</th><th>pt</th><th>審査員</th><th>合計</th><th></th></tr>
-    ${rows}
-  </table>
-  <p class="note" style="margin-top:4px">
-    順位点：1位3pt・2位2pt（3位以下は減少）　審査員：${state.judgeCards.map(k=>JUDGE_CARDS[k].n+"（"+JUDGE_CARDS[k].d+"+"+CONFIG.judgeBonus[k]+"pt）").join("・")}
-  </p>
-  <h2 style="margin-top:14px">バンド詳細</h2>
-  ${bandDetails}
-  <div class="row" style="margin-top:14px">
-    <button class="big" data-action="again">もう一度</button>
+  const stepTitles=["","🥁 各バンドの基礎点","✨ スキル効果（オープン）","🎵 Song1 結果","🎶 Song2 結果","⭐ 審査員ボーナス","🏆 最終結果"];
+
+  // progress bar + skip (steps 1-5)
+  const delays=[0,3000,3000,3500,3500,2500,0];
+  const ctrl=step<6?`<div class="aud-prog-wrap"><div class="aud-prog-fill" style="animation-duration:${delays[step]}ms"></div></div>
+    <button class="aud-skip" data-action="reveal-next">次へスキップ →</button>`:"";
+
+  // winner section (step 6)
+  const winnerSec=step>=6?(()=>{
+    const w=state.bands[r.winner];
+    return`<div class="aud-winner">
+      ${r.winner===0
+        ?`<div class="aud-winner-you">🎸 あなたの優勝！</div>`
+        :`<div style="font-size:12px;color:var(--muted)">優勝</div><div class="aud-winner-name">${w.name}</div>`}
+    </div>`;
+  })():"";
+
+  // band details + note + again (step 6)
+  const details=step>=6?`<h2 style="margin-top:14px">バンド詳細</h2>
+    ${state.bands.map(b=>{
+      const P=projPowers(b);
+      return`<div class="band${b.you?" you":""}">
+        <div class="top">
+          <span><span class="nm">${b.you?"あなた":b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
+          <div class="pw">${pwStr(P)}</div>
+        </div>
+        ${membChips(b,true)}
+      </div>`;
+    }).join("")}
+    <p class="note" style="margin-top:4px">
+      順位点：${CONFIG.placement[state.playerCount].map((p,i)=>`${i+1}位${p}pt`).join("・")}
+      　審査員：${state.judgeCards.map(k=>JUDGE_CARDS[k].n+"（"+JUDGE_CARDS[k].d+"+"+CONFIG.judgeBonus[k]+"pt）").join("・")}
+    </p>
+    <div class="row" style="margin-top:14px"><button class="big" data-action="again">もう一度</button></div>`:"";
+
+  const bannerBg=step>=6&&r.winner===0?"background:#1a5c3a":"";
+  const bannerTxt=step>=6?(r.winner===0?"🎸 あなたの優勝！":"優勝："+state.bands[r.winner].name):"🎵 オーディション進行中";
+
+  return`<div class="aud-stage">
+    <div class="banner" style="${bannerBg}"><div class="t">${bannerTxt}</div></div>
+    ${winnerSec}
+    <div class="aud-step-ttl">${stepTitles[step]}</div>
+    <div class="aud-cards">${cards}</div>
+    ${ctrl}
+    ${details}
   </div>`;
 }
 
@@ -1233,6 +1375,8 @@ document.addEventListener("click",e=>{
     return;
   }
   if(act==="startgame"){startGame();return;}
+  // audition reveal
+  if(act==="reveal-next"){advanceReveal();return;}
   // reset
   if(act==="again"){
     state={phase:"setup",rng:mulberry32(Math.random()*1e9|0),setup:state.lastSetup||{count:3}};
