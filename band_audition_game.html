@@ -274,7 +274,7 @@ const DECK_COMP = {guitar:13, vocal:8, bass:7, keyboard:6, cajon:4};
 const SKILLS = {
   enjoy:        {n:"エンジョイ勢",   d:"特殊効果なし",              risk:false},
   harmonizer:   {n:"ハモり上手",     d:"高さ+1",                    risk:false},
-  big_ensemble: {n:"大編成向き",     d:"5人以上で横+3",             risk:false},
+  big_ensemble: {n:"大編成向き",     d:"5人以上で横+2",             risk:false},
   precision:    {n:"精密機械",       d:"縦+1",                      risk:false},
   veteran:      {n:"経験者",         d:"担当軸+2",                  risk:false},
   own_world:    {n:"独自世界",       d:"全項目+2",                  risk:false},
@@ -444,7 +444,7 @@ function openSkillDelta(b){
   b.members.forEach(mem=>{
     switch(mem.open){
       case"harmonizer":   P.h+=1; break;
-      case"big_ensemble": if(sz>=5) P.m+=3; break;
+      case"big_ensemble": if(sz>=5) P.m+=2; break;
       case"precision":    P.r+=1; break;
       case"veteran":      P[primary(mem.instrument)]+=2; break;
       case"own_world":    P.r+=2;P.m+=2;P.h+=2; break;
@@ -460,7 +460,7 @@ function closedSkillDelta(b){
   b.members.forEach(mem=>{
     switch(mem.closed){
       case"harmonizer":   P.h+=1; break;
-      case"big_ensemble": if(sz>=5) P.m+=3; break;
+      case"big_ensemble": if(sz>=5) P.m+=2; break;
       case"precision":    P.r+=1; break;
       case"veteran":      P[primary(mem.instrument)]+=2; break;
       case"own_world":    P.r+=2;P.m+=2;P.h+=2; break;
@@ -556,10 +556,8 @@ function refill(){
 
 function doScout(b,mem){
   const cost=CONFIG.costs[mem.instrument];
-  b.tokens.r-=cost.r;b.tokens.m-=cost.m;
-  state.tokenPool.r+=cost.r;state.tokenPool.m+=cost.m;
   state.market=state.market.filter(x=>x.id!==mem.id);
-  // 資格勉強中: スカウト無効・場から消える（コストは消費）
+  // 資格勉強中: スカウト無効・場から消える（コスト返還）
   if(mem.closed==="quit_member"){
     refill();
     if(b.you){
@@ -760,7 +758,7 @@ function skillEffectInfo(skillKey,mem,sz,hasR){
   switch(skillKey){
     case"enjoy":        return{cls:"inactive",txt:"特殊効果なし"};
     case"harmonizer":   return{cls:"good",txt:"✓ 高さ+1"};
-    case"big_ensemble": return sz>=5?{cls:"good",txt:"✓ 発動（横+3）"}:{cls:"inactive",txt:`現${sz}人・5人から発動`};
+    case"big_ensemble": return sz>=5?{cls:"good",txt:"✓ 発動（横+2）"}:{cls:"inactive",txt:`現${sz}人・5人から発動`};
     case"precision":    return{cls:"good",txt:"✓ 縦+1"};
     case"veteran":      return{cls:"good",txt:`✓ ${pn}+2`};
     case"own_world":    return{cls:"good",txt:"✓ 全項目+2"};
