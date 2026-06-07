@@ -554,15 +554,18 @@ function judgeBonus(band,s1rank,s2rank){
 
 function runAudition(){
   // closedSkillDelta uses RNG — compute once per band per song, preserving order
+  function calcScore(f,song){
+    return Math.round((song.r||0)*f.r+(song.m||0)*f.m+(song.h||0)*f.h);
+  }
   const s1details=state.bands.map(b=>{
     const base=basePowers(b),open=openSkillDelta(b),closed=closedSkillDelta(b);
     const f={r:base.r+open.r+closed.r,m:base.m+open.m+closed.m,h:base.h+open.h+closed.h};
-    return{seat:b.seat,base,open,closed,score:Math.round(CONFIG.song1.r*f.r+CONFIG.song1.m*f.m+CONFIG.song1.h*f.h)};
+    return{seat:b.seat,base,open,closed,score:calcScore(f,CONFIG.song1)};
   });
   const s2details=state.bands.map(b=>{
     const base=basePowers(b),open=openSkillDelta(b),closed=closedSkillDelta(b);
     const f={r:base.r+open.r+closed.r,m:base.m+open.m+closed.m,h:base.h+open.h+closed.h};
-    return{seat:b.seat,base,open,closed,score:Math.round(CONFIG.song2.r*f.r+CONFIG.song2.m*f.m+CONFIG.song2.h*f.h)};
+    return{seat:b.seat,base,open,closed,score:calcScore(f,CONFIG.song2)};
   });
   const s1=s1details.map(d=>({seat:d.seat,score:d.score}));
   const s2=s2details.map(d=>({seat:d.seat,score:d.score}));
@@ -619,6 +622,8 @@ function doScout(b,mem){
     log(b.name+"が"+mem.name+"をスカウトしようとしたが断られた（資格勉強中）",b.you?"you":"bot");
     return;
   }
+  b.tokens.r-=cost.r; b.tokens.m-=cost.m;
+  state.tokenPool.r+=cost.r; state.tokenPool.m+=cost.m;
   b.members.push(mem);
   refill();
   if(b.you){
