@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バンド・オーディション v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF8F1;--card:#fff;--ink:#241D16;--muted:#7A6C5B;--line:#DDD3C0;--line2:#ECE4D4;
+  --r:#BE4A2C;--m:#2E7D6B;--h:#C2882A;--accent:#9A2C1E;--warn:#7A3000;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--ink);
+  background:radial-gradient(130% 90% at 50% -10%,#3a352f,#211e1b 70%);
+  min-height:100vh;padding:14px 10px 60px;font-size:14px;}
+.wrap{max-width:900px;margin:0 auto;}
+.sheet{background:var(--paper);border-radius:6px;padding:16px 16px 22px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
+h1{font-family:"RocknRoll One";font-size:26px;letter-spacing:.01em;line-height:1;}
+h1 .a{color:var(--accent);}
+.kick{font-size:9px;letter-spacing:.4em;color:var(--accent);font-weight:700;text-transform:uppercase;}
+h2{font-size:13px;font-weight:900;margin:14px 0 7px;letter-spacing:.03em;display:flex;align-items:center;gap:6px;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;}
+.r{color:var(--r);}.m{color:var(--m);}.h{color:var(--h);}
+.bg-r{background:var(--r);}.bg-m{background:var(--m);}.bg-h{background:var(--h);}
+.muted{color:var(--muted);}
+.row{display:flex;flex-wrap:wrap;gap:8px;}
+button{font-family:inherit;font-size:13px;cursor:pointer;border:1.5px solid var(--ink);
+  background:var(--card);color:var(--ink);border-radius:5px;padding:7px 12px;font-weight:700;transition:.12s;}
+button:hover{background:var(--ink);color:var(--paper);}
+button:disabled{opacity:.32;cursor:not-allowed;}
+button.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
+button.ghost{border-style:dashed;font-weight:500;}
+button.big{padding:10px 18px;font-size:14px;}
+
+/* ===== member cards ===== */
+.mkt{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
+.mem{border:1.5px solid var(--line);background:var(--card);border-radius:6px;
+  padding:7px 8px 30px;width:132px;position:relative;cursor:default;transition:transform .12s,box-shadow .12s;}
+.mem.click{border-color:var(--ink);cursor:pointer;}
+.mem.click:hover{box-shadow:0 4px 0 var(--accent);transform:translateY(-2px);}
+.mem.cant-afford{opacity:.5;}
+.mem.new-type{border-color:var(--m);background:#f5fdf8;}
+.mem.risky-peeked{border-color:var(--r);background:#fff8f7;}
+.mem .mname{font-size:11.5px;font-weight:900;letter-spacing:.02em;margin-bottom:1px;}
+.mem .inst{font-size:12px;font-weight:700;color:var(--muted);}
+.mem .stats{font-size:11px;font-weight:700;margin:3px 0 2px;letter-spacing:.02em;}
+.mem .cost{font-size:10px;font-weight:700;margin-bottom:3px;}
+.mem .sk{font-size:10px;line-height:1.4;}
+.mem .closed{font-size:10px;color:var(--muted);}
+.mem .risk{color:var(--accent);font-weight:700;}
+.detail-btn{position:absolute;bottom:5px;right:6px;font-size:10px;padding:2px 6px;
+  border-radius:8px;border-color:var(--line);color:var(--muted);font-weight:500;background:var(--paper);}
+.detail-btn:hover{background:var(--ink);color:var(--paper);}
+
+/* ===== race track ===== */
+.race-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.race-track{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;}
+.race-label{font-size:11px;font-weight:900;letter-spacing:.04em;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:baseline;}
+.race-formula{font-size:10px;font-weight:400;color:var(--muted);}
+.race-row{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--line2);font-size:12px;}
+.race-row:last-child{border-bottom:none;}
+.race-rank{font-weight:900;font-size:11px;width:22px;flex-shrink:0;color:var(--muted);}
+.race-name{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.race-score{font-weight:900;font-size:13px;min-width:36px;text-align:right;}
+.race-pts{font-size:10px;min-width:28px;text-align:right;}
+.race-row.race-you{background:#F3ECDC;border-radius:4px;padding:3px 4px;}
+.race-row.race-you .race-name{color:var(--accent);}
+
+/* ===== judge & pool ===== */
+.top-panels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.judge-panel{background:var(--card);border:1px solid var(--h);border-radius:6px;padding:8px 10px;}
+.judge-title{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--h);margin-bottom:5px;text-transform:uppercase;}
+.judge-card-item{font-size:11.5px;margin-bottom:3px;}
+.judge-card-item .jn{font-weight:900;}
+.judge-card-item .jd{color:var(--muted);font-size:10.5px;}
+.info-panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;}
+.token-pool{font-size:12px;font-weight:700;display:flex;gap:10px;align-items:center;margin-bottom:6px;}
+.pool-label{font-size:10px;color:var(--muted);font-weight:500;}
+.pool-bar{height:6px;background:var(--line2);border-radius:3px;margin-top:2px;overflow:hidden;}
+.pool-fill{height:100%;border-radius:3px;}
+.studio-row{display:flex;gap:6px;margin-bottom:4px;}
+.studio-label{font-size:10px;font-weight:700;width:60px;flex-shrink:0;display:flex;align-items:center;}
+
+/* ===== draft phase ===== */
+.draft-section{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;margin-top:10px;}
+.draft-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px;}
+.draft-row:last-child{border-bottom:none;}
+.draft-seat{font-weight:700;min-width:80px;}
+.draft-inst{font-size:12px;color:var(--muted);}
+.draft-inst.picked{color:var(--ink);font-weight:700;}
+.turn-order-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;padding:6px 10px;
+  background:#F3ECDC;border-radius:4px;}
+
+/* ===== band ===== */
+.band{border:1.5px solid var(--line);border-radius:6px;padding:9px 10px;margin-bottom:6px;background:var(--card);}
+.band.you{border-color:var(--accent);border-width:2px;}
+.band .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.band .nm{font-weight:900;}
+.band .lead{font-size:10.5px;color:var(--muted);}
+.pw{display:flex;gap:10px;font-weight:900;font-size:13px;}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.chip{font-size:10.5px;border:1px solid var(--line);border-radius:10px;padding:1px 7px;background:var(--paper);}
+.chip.you{background:#F3ECDC;}
+
+/* ===== log ===== */
+.log{background:#231d16;color:#e8ddc9;border-radius:6px;padding:8px 11px;font-size:11.5px;
+  line-height:1.7;max-height:110px;overflow-y:auto;margin-top:10px;}
+.log div{opacity:.8;}.log div:last-child{opacity:1;font-weight:700;}
+.log .you{color:#f0d878;}.log .bot{color:#9ec4a0;}.log .sys{color:#a0b8d8;font-style:italic;}
+
+/* ===== banner ===== */
+.banner{background:var(--ink);color:var(--paper);border-radius:6px;padding:9px 12px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+.banner .t{font-family:"RocknRoll One";font-size:15px;}
+.banner.last{background:var(--warn);}
+.turn-bar{height:5px;background:rgba(255,255,255,.15);border-radius:3px;margin-top:7px;overflow:hidden;width:100%;}
+.turn-fill{height:100%;background:rgba(255,255,255,.6);border-radius:3px;transition:width .4s ease;}
+
+/* ===== scout reveal modal ===== */
+.reveal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;
+  align-items:center;justify-content:center;z-index:300;padding:16px;}
+.reveal-card{background:var(--paper);border-radius:12px;padding:22px;max-width:320px;width:100%;
+  text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.reveal-header{font-size:12px;color:var(--muted);margin-bottom:4px;}
+.reveal-name{font-family:"RocknRoll One";font-size:22px;margin-bottom:12px;}
+.reveal-skills{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.skill-row{border-radius:8px;padding:10px 14px;text-align:left;}
+.skill-row.open-row{background:#e8f4ec;border:1px solid #b0d8bc;}
+.skill-row.closed-row.good{background:#d4f0e0;border:1px solid #8ecfaa;animation:flipReveal .5s ease-out;}
+.skill-row.closed-row.bad{background:#fce8e4;border:1px solid #e4a89a;animation:flipReveal .5s ease-out;}
+.skill-row-label{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:3px;}
+.skill-row-name{font-weight:900;font-size:15px;}
+.skill-row-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+@keyframes flipReveal{0%{transform:rotateY(90deg);opacity:0;}100%{transform:rotateY(0);opacity:1;}}
+
+/* ===== detail modal ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;
+  align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modal-box{background:var(--paper);border-radius:10px;padding:18px;max-width:340px;width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);animation:modalIn .2s ease-out;}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(8px);}to{opacity:1;transform:none;}}
+.sdp-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.sdp-name{font-family:"RocknRoll One";font-size:20px;}
+.sdp-inst{font-size:13px;color:var(--muted);}
+.sdp-close{margin-left:auto;font-size:12px;padding:3px 8px;border-radius:8px;}
+.sdp-stats{display:flex;gap:12px;font-weight:900;font-size:15px;margin-bottom:6px;}
+.sdp-cost{font-size:12px;font-weight:700;margin-bottom:12px;}
+.sdp-section{margin-bottom:10px;}
+.sdp-sec-label{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:4px;}
+.sdp-row{border:1px solid var(--line2);border-radius:6px;padding:8px 10px;background:var(--card);}
+.sdp-row .sn{font-weight:900;font-size:13px;}
+.sdp-row .sd{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.sdp-row .sa{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:10px;display:inline-block;margin-top:2px;}
+.sdp-row.good .sa{background:#d4f0e0;color:#1a5c3a;}
+.sdp-row.inactive .sa{background:#f0ece4;color:var(--muted);}
+.sdp-row.bad .sa{background:#fce8e4;color:#8a1a0a;}
+.sdp-row.risk-row{border-color:var(--r);}
+.sdp-scout{width:100%;margin-top:14px;background:var(--accent);color:#fff;border-color:var(--accent);font-size:14px;}
+.sdp-scout:hover{background:#7a1a10;}
+
+/* ===== toast & anim ===== */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:#231d16;color:#e8ddc9;border-radius:20px;padding:8px 18px;
+  font-size:13px;font-weight:700;opacity:0;transition:opacity .25s,transform .25s;
+  z-index:400;max-width:85vw;text-align:center;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.t-scout{background:var(--m);color:#fff;}
+.toast.t-practice-r{background:var(--r);color:#fff;}
+.toast.t-practice-m{background:var(--m);color:#fff;}
+.toast.t-warn{background:var(--warn);color:#fff;}
+@keyframes chipIn{from{opacity:0;transform:scale(.7) translateY(6px);}to{opacity:1;transform:none;}}
+
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12px;}
+th,td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--line2);}
+th{font-weight:900;border-bottom:1.5px solid var(--line);}
+td.l,th.l{text-align:left;}
+tr.win td{background:#F3ECDC;font-weight:900;}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px;}
+
+@media(max-width:560px){.mem{width:calc(50% - 4px);}.race-wrap{grid-template-columns:1fr;}.top-panels{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="modal-container"></div>
+<div class="wrap"><div class="sheet" id="app"></div></div>
+<script>
+"use strict";
+
+/* ====== CONFIG ====== */
+const CONFIG = {
+  turns: 14,
+  bandCap: 6,
+  practiceGain: 2,
+  song1: {h:2, m:1},
+  song2: {r:2, m:1},
+  placement: {2:[3,0], 3:[5,2,0], 4:[5,3,1,0], 5:[5,3,2,1,0]},
+  tokenPoolBase: 20,
+  stageFrightProb: 0.7,
+  stageFrightPenalty: 2,
+  costs: {
+    vocal:    {r:0, m:4},
+    guitar:   {r:1, m:4},
+    bass:     {r:3, m:0},
+    cajon:    {r:4, m:0},
+    keyboard: {r:2, m:2},
+  },
+  judgeBonus: {
+    rhythm_lover: 1,
+    big_band:     2,
+    surprise:     2,
+    hard_work:    1,
+    vocal_fan:    1,
+    harmony_fan:  1,
+  },
+};
+
+/* ====== DATA ====== */
+const INST = {
+  vocal:    {label:"ボーカル",   r:0, m:3, h:1},
+  guitar:   {label:"ギター",     r:1, m:3, h:1},
+  bass:     {label:"ベース",     r:2, m:0, h:1},
+  cajon:    {label:"カホン",     r:3, m:0, h:1},
+  keyboard: {label:"キーボード", r:0, m:0, h:3},
+};
+const INST_KEYS = Object.keys(INST);
+
+// 山札構成 合計38枚
+const DECK_COMP = {guitar:10, vocal:9, bass:8, keyboard:7, cajon:4};
+
+const SKILLS = {
+  harmonizer:   {n:"ハモり上手",     d:"高さ+2",                    risk:false},
+  big_ensemble: {n:"大編成向き",     d:"5人以上で横+3",             risk:false},
+  tight_rhythm: {n:"几帳面なリズム", d:"カホン/ベースがいれば縦+2", risk:false},
+  hidden_ace:   {n:"隠れた名手",     d:"担当軸+2",                  risk:false},
+  stoic:        {n:"ストイック",     d:"3人以下なら担当軸+4",       risk:false},
+  stage_fright: {n:"本番×",         d:"70%で縦・横−2",             risk:true},
+  misfit:       {n:"はみ出し者",     d:"4人以上なら担当軸−2",      risk:true},
+};
+const SKILL_KEYS = Object.keys(SKILLS);
+
+const JUDGE_CARDS = {
+  rhythm_lover: {n:"リズム重視",     d:"Song2 1位に"},
+  big_band:     {n:"大バンド好き",   d:"メンバー数最多に"},
+  surprise:     {n:"サプライズ枠",   d:"楽器種類最多に"},
+  hard_work:    {n:"実力主義",       d:"練習回数最多に"},
+  vocal_fan:    {n:"ボーカル推し",   d:"ボーカル持ちに"},
+  harmony_fan:  {n:"ハーモニー好き", d:"Song1 1位に"},
+};
+const JUDGE_KEYS = Object.keys(JUDGE_CARDS);
+
+const NAMES = [
+  "アキ","ナナ","リク","ソラ","コウ","ミオ","レイ","ユウ","カナ","ハル",
+  "ショウ","ツバサ","マイ","ケン","アヤ","タイチ","ノア","ヒナ","ルイ","ゼン",
+  "モモ","タク","ミサ","コト","ジン","ラン","ユキ","ハジメ","サクラ","ダイ",
+  "リン","ミズキ","カイ","ナオ","セイ","ヒロ","ノブ","マコト","イオ","タキ",
+];
+
+/* ====== RNG ====== */
+function mulberry32(a){
+  return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+}
+function pick(arr){return arr[Math.floor(state.rng()*arr.length)];}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(state.rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ====== STATE ====== */
+let state={};
+
+function poolSize(pc){return Math.max(CONFIG.tokenPoolBase,pc*4+6);}
+function primary(inst){return inst==="cajon"||inst==="bass"?"r":inst==="keyboard"?"h":"m";}
+function allInsts(b){return [b.instrument,...b.members.map(x=>x.instrument)];}
+function bSize(b){return b.members.length+1;}
+
+/* ====== SETUP → DRAFT ====== */
+function newSetup(){
+  state={phase:"setup",rng:mulberry32(Math.random()*1e9|0),setup:{count:3}};
+  render();
+}
+
+function goDraft(){
+  const s=state.setup;
+  const seed=Math.random()*1e9|0;
+  state={
+    phase:"draft", seed, rng:mulberry32(seed),
+    playerCount:s.count,
+    judgeCards:[],
+    draftInsts:{},   // {seat: instrumentKey}
+    botArchetypes:{},
+    lastSetup:s,
+  };
+  const jk=[...JUDGE_KEYS]; shuffle(jk);
+  state.judgeCards=[jk[0],jk[1]];
+  const arches=["wide","narrow","balanced","random"];
+  for(let i=1;i<s.count;i++) state.botArchetypes[i]=arches[(i-1)%arches.length];
+  render();
+}
+
+function selectInstrument(inst){
+  state.draftInsts[0]=inst;
+  const taken=new Set([inst]);
+  for(let seat=1;seat<state.playerCount;seat++){
+    const avail=INST_KEYS.filter(k=>!taken.has(k));
+    if(!avail.length) break;
+    const arch=state.botArchetypes[seat];
+    let choice;
+    if(arch==="narrow") choice=avail.find(k=>k==="cajon")||avail.find(k=>k==="bass")||avail[0];
+    else if(arch==="wide") choice=avail.find(k=>k==="vocal")||avail.find(k=>k==="guitar")||avail[0];
+    else if(arch==="balanced") choice=avail.find(k=>k==="keyboard")||avail[0];
+    else choice=avail[Math.floor(state.rng()*avail.length)];
+    state.draftInsts[seat]=choice;
+    taken.add(choice);
+  }
+  render();
+}
+
+/* ====== START GAME ====== */
+function makeBand(seat,nm,you,inst,arch){
+  return{seat,name:nm,you,instrument:inst,archetype:arch,
+    members:[],tokens:{r:0,m:0},practiceCount:0};
+}
+
+function startGame(){
+  const d=state;
+  const ng={
+    phase:"play", seed:d.seed, rng:d.rng,
+    playerCount:d.playerCount,
+    round:0,
+    tokenPool:{r:poolSize(d.playerCount),m:poolSize(d.playerCount)},
+    judgeCards:d.judgeCards,
+    log:[],detailCard:null,lastAction:null,scoutReveal:null,
+    peekUsed:false,peekMode:false,
+    bands:[],deck:[],market:[],results:null,
+    lastSetup:d.lastSetup,
+    botArchetypes:d.botArchetypes,
+  };
+  state=ng;
+
+  // 山札作成（楽器別枚数指定）
+  let id=0;
+  Object.entries(DECK_COMP).forEach(([inst,count])=>{
+    for(let i=0;i<count;i++){
+      const sk=[...SKILL_KEYS];shuffle(sk);
+      ng.deck.push({id,name:NAMES[id%NAMES.length],instrument:inst,open:sk[0],closed:sk[1],peeked:false});
+      id++;
+    }
+  });
+  shuffle(ng.deck);
+
+  // バンド作成（ドラフト楽器を使用）
+  for(let seat=0;seat<d.playerCount;seat++){
+    const inst=d.draftInsts[seat];
+    const arch=seat===0?"human":d.botArchetypes[seat];
+    const name=seat===0?"あなた":"相手"+String.fromCharCode(64+seat);
+    ng.bands.push(makeBand(seat,name,seat===0,inst,arch));
+  }
+
+  // マーケット初期配置
+  for(let i=0;i<d.playerCount+2;i++) ng.market.push(ng.deck.pop());
+
+  log("ゲーム開始（seed "+d.seed+"）","sys");
+  log("審査員："+ng.judgeCards.map(k=>JUDGE_CARDS[k].n).join("・"),"sys");
+  log("手番順（ドラフト逆順）："+ng.bands.slice().reverse().map(b=>b.name).join(" → "),"sys");
+  render();
+}
+
+function log(t,cls=""){state.log.push({t,cls});}
+
+/* ====== ENGINE ====== */
+function canAfford(b,cost){return b.tokens.r>=cost.r&&b.tokens.m>=cost.m;}
+
+function basePowers(b){
+  const P={r:0,m:0,h:0};
+  allInsts(b).forEach(i=>{P.r+=INST[i].r;P.m+=INST[i].m;P.h+=INST[i].h;});
+  P.r+=b.tokens.r;P.m+=b.tokens.m;
+  return P;
+}
+
+function openSkillDelta(b){
+  const P={r:0,m:0,h:0};
+  const sz=bSize(b);
+  const hasR=allInsts(b).some(i=>i==="cajon"||i==="bass");
+  b.members.forEach(mem=>{
+    switch(mem.open){
+      case"harmonizer":   P.h+=2; break;
+      case"big_ensemble": if(sz>=5) P.m+=3; break;
+      case"tight_rhythm": if(hasR) P.r+=2; break;
+      case"hidden_ace":   P[primary(mem.instrument)]+=2; break;
+      case"stoic":        if(sz<=3) P[primary(mem.instrument)]+=4; break;
+    }
+  });
+  return P;
+}
+
+function closedSkillDelta(b){
+  const P={r:0,m:0,h:0};
+  const sz=bSize(b);
+  const hasR=allInsts(b).some(i=>i==="cajon"||i==="bass");
+  b.members.forEach(mem=>{
+    switch(mem.closed){
+      case"harmonizer":   P.h+=2; break;
+      case"big_ensemble": if(sz>=5) P.m+=3; break;
+      case"tight_rhythm": if(hasR) P.r+=2; break;
+      case"hidden_ace":   P[primary(mem.instrument)]+=2; break;
+      case"stoic":        if(sz<=3) P[primary(mem.instrument)]+=4; break;
+      case"stage_fright":
+        if(state.rng()<CONFIG.stageFrightProb){P.r-=CONFIG.stageFrightPenalty;P.m-=CONFIG.stageFrightPenalty;}
+        break;
+      case"misfit": if(sz>=4) P[primary(mem.instrument)]-=2; break;
+    }
+  });
+  return P;
+}
+
+function projPowers(b){
+  const bp=basePowers(b),sk=openSkillDelta(b);
+  return{r:bp.r+sk.r,m:bp.m+sk.m,h:bp.h+sk.h};
+}
+function projSong(b,song){
+  const P=projPowers(b);
+  return Math.round((song.r||0)*P.r+(song.m||0)*P.m+(song.h||0)*P.h);
+}
+function songScore(b,song){
+  const bp=basePowers(b),sk=openSkillDelta(b),cl=closedSkillDelta(b);
+  const P={r:bp.r+sk.r+cl.r,m:bp.m+sk.m+cl.m,h:bp.h+sk.h+cl.h};
+  return Math.round((song.r||0)*P.r+(song.m||0)*P.m+(song.h||0)*P.h);
+}
+
+function makePlacement(scores){
+  const tbl=CONFIG.placement[state.playerCount]||[];
+  const sorted=[...scores].sort((a,b_)=>b_.score-a.score);
+  const pts={};sorted.forEach((s,i)=>pts[s.seat]=tbl[i]??0);
+  return pts;
+}
+
+function judgeBonus(band,s1rank,s2rank){
+  let bonus=0;
+  state.judgeCards.forEach(k=>{
+    const val=CONFIG.judgeBonus[k]||0;
+    switch(k){
+      case"rhythm_lover": if(s2rank===0) bonus+=val; break;
+      case"harmony_fan":  if(s1rank===0) bonus+=val; break;
+      case"big_band":{
+        const mx=Math.max(...state.bands.map(b=>bSize(b)));
+        if(bSize(band)===mx) bonus+=val; break;
+      }
+      case"surprise":{
+        const myT=new Set(allInsts(band)).size;
+        const mx=Math.max(...state.bands.map(b=>new Set(allInsts(b)).size));
+        if(myT===mx) bonus+=val; break;
+      }
+      case"hard_work":{
+        const mx=Math.max(...state.bands.map(b=>b.practiceCount));
+        if(band.practiceCount===mx) bonus+=val; break;
+      }
+      case"vocal_fan":
+        if(allInsts(band).includes("vocal")) bonus+=val; break;
+    }
+  });
+  return bonus;
+}
+
+function runAudition(){
+  const s1=state.bands.map(b=>({seat:b.seat,score:songScore(b,CONFIG.song1)}));
+  const s2=state.bands.map(b=>({seat:b.seat,score:songScore(b,CONFIG.song2)}));
+  const p1=makePlacement(s1),p2=makePlacement(s2);
+  const s1s=[...s1].sort((a,b)=>b.score-a.score);
+  const s2s=[...s2].sort((a,b)=>b.score-a.score);
+  const totals=state.bands.map(b=>{
+    const r1=s1s.findIndex(x=>x.seat===b.seat);
+    const r2=s2s.findIndex(x=>x.seat===b.seat);
+    const base=(p1[b.seat]||0)+(p2[b.seat]||0);
+    const jb=judgeBonus(b,r1,r2);
+    return{seat:b.seat,base,jb,total:base+jb};
+  });
+  const maxT=Math.max(...totals.map(t=>t.total));
+  const tied=totals.filter(t=>t.total===maxT);
+  let winner;
+  if(tied.length===1){winner=tied[0].seat;}
+  else{
+    const ms=tied.map(t=>({seat:t.seat,mel:projPowers(state.bands[t.seat]).m}));
+    const mx=Math.max(...ms.map(x=>x.mel));
+    const mt=ms.filter(x=>x.mel===mx);
+    winner=mt[Math.floor(state.rng()*mt.length)].seat;
+  }
+  state.results={s1,s2,p1,p2,totals,winner};
+  state.phase="audition";render();
+}
+
+/* ====== ACTIONS ====== */
+function refill(){
+  while(state.market.length<state.playerCount+2&&state.deck.length)
+    state.market.push(state.deck.pop());
+}
+
+function doScout(b,mem){
+  const cost=CONFIG.costs[mem.instrument];
+  b.tokens.r-=cost.r;b.tokens.m-=cost.m;
+  state.tokenPool.r+=cost.r;state.tokenPool.m+=cost.m;
+  state.market=state.market.filter(x=>x.id!==mem.id);
+  b.members.push(mem);
+  refill();
+  if(b.you){
+    state.lastAction={type:"scout",memberId:mem.id,name:mem.name,inst:INST[mem.instrument].label};
+    // スカウト後クローズド公開演出
+    state.scoutReveal={name:mem.name,inst:INST[mem.instrument].label,open:mem.open,closed:mem.closed};
+  }
+  log(b.name+"が"+mem.name+"（"+INST[mem.instrument].label+"）をスカウト",b.you?"you":"bot");
+}
+
+function doPractice(b,axis){
+  const gain=Math.min(CONFIG.practiceGain,state.tokenPool[axis]);
+  if(gain<=0){log((axis==="r"?"A":"B")+"スタジオが満員（プール枯渇）","sys");return false;}
+  state.tokenPool[axis]-=gain;
+  b.tokens[axis]+=gain;
+  b.practiceCount++;
+  if(b.you) state.lastAction={type:"practice",axis,gain};
+  log(b.name+"が"+(axis==="r"?"A":"B")+"スタジオで練習（+"+ gain+"トークン）",b.you?"you":"bot");
+  return true;
+}
+
+function endPlayerTurn(){
+  state.peekMode=false;
+  // ドラフト逆順でボット（最後に選んだボットが先に手番）
+  for(let s=state.playerCount-1;s>=1;s--) applyBot(state.bands[s]);
+  state.round++;
+  if(state.round>=CONFIG.turns){runAudition();return;}
+  render();
+}
+
+/* ====== BOT ====== */
+function botTarget(b){
+  const mkt=state.market.filter(()=>bSize(b)<CONFIG.bandCap);
+  if(!mkt.length||bSize(b)>=CONFIG.bandCap) return null;
+  const a=b.archetype;
+  const have=new Set(allInsts(b));
+  if(a==="wide") return mkt.find(m=>!have.has(m.instrument))||mkt[0];
+  if(a==="narrow"){
+    if(b.members.length>=3) return null;
+    return mkt.find(m=>m.instrument==="cajon")||mkt.find(m=>m.instrument==="bass")||mkt[0];
+  }
+  if(a==="balanced"){
+    if(b.members.length>=4) return null;
+    return mkt.find(m=>!have.has(m.instrument))||mkt[0];
+  }
+  return state.rng()<0.4?mkt[Math.floor(state.rng()*mkt.length)]:null;
+}
+function botPrefAxis(b){
+  const a=b.archetype;
+  if(a==="narrow") return"r";
+  if(a==="wide") return b.tokens.r>b.tokens.m?"m":"r";
+  if(a==="balanced") return b.tokens.r<=b.tokens.m?"r":"m";
+  return state.rng()<0.5?"r":"m";
+}
+function applyBot(b){
+  const want=botTarget(b);
+  if(want){
+    const cost=CONFIG.costs[want.instrument];
+    if(canAfford(b,cost)){doScout(b,want);return;}
+    const needR=Math.max(0,cost.r-b.tokens.r),needM=Math.max(0,cost.m-b.tokens.m);
+    const axis=needR>needM?"r":"m";
+    if(state.tokenPool[axis]>0){doPractice(b,axis);return;}
+    const other=axis==="r"?"m":"r";
+    if(state.tokenPool[other]>0){doPractice(b,other);return;}
+    return;
+  }
+  const axis=botPrefAxis(b);
+  if(state.tokenPool[axis]>0){doPractice(b,axis);return;}
+  const other=axis==="r"?"m":"r";
+  if(state.tokenPool[other]>0) doPractice(b,other);
+}
+
+/* ====== UI HELPERS ====== */
+function skillEffectInfo(skillKey,mem,sz,hasR){
+  const pri=primary(mem.instrument);
+  const pn=pri==="r"?"縦":pri==="m"?"横":"高さ";
+  switch(skillKey){
+    case"harmonizer":   return{cls:"good",txt:"✓ 高さ+2"};
+    case"big_ensemble": return sz>=5?{cls:"good",txt:"✓ 発動（横+3）"}:{cls:"inactive",txt:`現${sz}人・5人から発動`};
+    case"tight_rhythm": return hasR?{cls:"good",txt:"✓ 縦+2（発動）"}:{cls:"inactive",txt:"カホン/ベース必要"};
+    case"hidden_ace":   return{cls:"good",txt:`✓ ${pn}+2`};
+    case"stoic":        return sz<=3?{cls:"good",txt:`✓ ${pn}+4（発動）`}:{cls:"inactive",txt:`${sz}人・3人以下で発動`};
+    case"stage_fright": return{cls:"bad",txt:"⚠ 本番70%で縦・横−2"};
+    case"misfit":       return sz>=4?{cls:"bad",txt:`⚠ ${pn}−2（発動）`}:{cls:"inactive",txt:`4人以上で${pn}−2`};
+  }
+  return{cls:"inactive",txt:""};
+}
+function pwStr(P){return`<span class="r">縦${P.r}</span> <span class="m">横${P.m}</span> <span class="h">高${P.h}</span>`;}
+function costStr(inst){
+  const c=CONFIG.costs[inst];const parts=[];
+  if(c.r>0) parts.push(`<span class="r">縦×${c.r}</span>`);
+  if(c.m>0) parts.push(`<span class="m">横×${c.m}</span>`);
+  return parts.join("+");
+}
+
+function memCard(mem,opts){
+  const i=INST[mem.instrument];
+  let cl="mem";
+  if(opts.clickScout||opts.clickPeek) cl+=" click";
+  if(opts.cantAfford) cl+=" cant-afford";
+  if(opts.newType) cl+=" new-type";
+  if(mem.peeked&&SKILLS[mem.closed].risk) cl+=" risky-peeked";
+  const closedHtml=mem.peeked
+    ?`<div class="sk${SKILLS[mem.closed].risk?' risk':''}">👁 隠:<b>${SKILLS[mem.closed].n}</b></div>`
+    :`<div class="closed muted">隠: ？（スカウトで公開）</div>`;
+  const action=opts.clickPeek?'peek-card':'scout';
+  return`<div class="${cl}" data-mid="${mem.id}"${(opts.clickScout||opts.clickPeek)?` data-action="${action}"`:""}>
+    <div class="mname">${mem.name}</div>
+    <div class="inst">${i.label}</div>
+    <div class="stats"><span class="r">縦${i.r}</span> <span class="m">横${i.m}</span> <span class="h">高${i.h}</span></div>
+    <div class="cost">コスト：${costStr(mem.instrument)}</div>
+    <div class="sk">表:<b>${SKILLS[mem.open].n}</b></div>
+    ${closedHtml}
+    ${!opts.clickPeek?`<button class="detail-btn" data-action="opendetail" data-mid="${mem.id}">詳細</button>`:''}
+  </div>`;
+}
+
+/* ====== RENDER ====== */
+function render(){
+  const app=document.getElementById("app");
+  if(state.phase==="setup") app.innerHTML=renderSetup();
+  else if(state.phase==="draft") app.innerHTML=renderDraft();
+  else if(state.phase==="play") app.innerHTML=renderPlay();
+  else app.innerHTML=renderAudition();
+  const logEl=app.querySelector(".log");if(logEl) logEl.scrollTop=logEl.scrollHeight;
+  renderOverlay();
+  afterRender();
+}
+
+function renderOverlay(){
+  const mc=document.getElementById("modal-container");if(!mc) return;
+  if(state.scoutReveal){mc.innerHTML=renderRevealModal();return;}
+  if(state.phase==="play"&&state.detailCard!==null){
+    const mem=state.market.find(m=>m.id===state.detailCard);
+    if(!mem){state.detailCard=null;mc.innerHTML="";return;}
+    mc.innerHTML=renderDetailModal(mem,state.bands[0]);return;
+  }
+  mc.innerHTML="";
+}
+
+function renderSetup(){
+  const s=state.setup;
+  const counts=[2,3,4,5].map(n=>`<button class="${s.count===n?"sel":""}" data-action="count" data-n="${n}">${n}人</button>`).join("");
+  return`<div class="kick">Band Audition v2</div>
+    <h1>バンド・<span class="a">オーディション</span></h1>
+    <p class="note">練習でトークンを貯め、コストを払ってメンバーをスカウト。2曲のオーディションで競り勝つ。</p>
+    <h2><span class="dot bg-r"></span>人数</h2>
+    <div class="row">${counts}</div>
+    <div class="row" style="margin-top:14px">
+      <button class="big" data-action="godraft">次へ →</button>
+    </div>`;
+}
+
+function renderDraft(){
+  const playerPicked=state.draftInsts[0]!=null;
+  const takenSet=new Set(Object.values(state.draftInsts));
+  const archNames={wide:"大編成型",narrow:"少数精鋭型",balanced:"バランス型",random:"ランダム型"};
+
+  const instBtns=INST_KEYS.map(k=>{
+    const takenByBot=takenSet.has(k)&&state.draftInsts[0]!==k;
+    const selected=state.draftInsts[0]===k;
+    return`<button class="${selected?"sel":""}" data-action="selectinst" data-k="${k}"
+      ${takenByBot||selected?"disabled":""}>
+      ${INST[k].label}<br>
+      <span style="font-size:10px;font-weight:500">縦${INST[k].r} 横${INST[k].m} 高${INST[k].h}</span>
+      ${takenByBot?'<br><span style="font-size:9px">取得済み</span>':""}
+    </button>`;
+  }).join("");
+
+  // ドラフト結果
+  const draftRows=Array.from({length:state.playerCount},(_,i)=>{
+    const inst=state.draftInsts[i];
+    const label=i===0?"あなた":`相手${String.fromCharCode(64+i)}（${archNames[state.botArchetypes[i]]||""}）`;
+    return`<div class="draft-row">
+      <span class="draft-seat">${label}</span>
+      <span class="draft-inst ${inst?"picked":""}">
+        ${inst?INST[inst].label+"（縦"+INST[inst].r+" 横"+INST[inst].m+" 高"+INST[inst].h+"）":"待機中..."}
+      </span>
+    </div>`;
+  }).join("");
+
+  // 手番順の説明
+  const orderNote=playerPicked?`<div class="turn-order-note">
+    ドラフト順：あなた → ${Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(65+i)).join(" → ")}<br>
+    ゲームの手番順（逆）：${Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(64+state.playerCount-i-1)).join(" → ")} → あなた
+  </div>`:"";
+
+  const startBtn=playerPicked?`<button class="big" data-action="startgame">ゲームを始める →</button>`:"";
+
+  return`<div class="kick">Draft Phase</div>
+    <h1>バンド・<span class="a">オーディション</span></h1>
+
+    <h2><span class="dot bg-h"></span>今回の審査員（全員に公開）</h2>
+    <div class="draft-section" style="border-color:var(--h)">
+      ${state.judgeCards.map(k=>`<div class="judge-card-item">
+        <span class="jn">${JUDGE_CARDS[k].n}</span>
+        <span class="jd"> — ${JUDGE_CARDS[k].d} <b>+${CONFIG.judgeBonus[k]}pt</b></span>
+      </div>`).join("")}
+    </div>
+
+    <h2 style="margin-top:14px"><span class="dot bg-r"></span>楽器を選択（同じ楽器は選べません）</h2>
+    <div class="row">${instBtns}</div>
+    <div class="draft-section" style="margin-top:10px">${draftRows}</div>
+    ${orderNote}
+    <div class="row" style="margin-top:12px">${startBtn}</div>`;
+}
+
+function renderJudge(){
+  return`<div class="judge-panel">
+    <div class="judge-title">今回の審査員</div>
+    ${state.judgeCards.map(k=>`<div class="judge-card-item">
+      <span class="jn">${JUDGE_CARDS[k].n}</span>
+      <span class="jd"> — ${JUDGE_CARDS[k].d} +${CONFIG.judgeBonus[k]}pt</span>
+    </div>`).join("")}
+  </div>`;
+}
+
+function renderInfoPanel(){
+  const you=state.bands[0];
+  const pMax=poolSize(state.playerCount);
+  const pr=state.tokenPool.r,pm=state.tokenPool.m;
+  return`<div class="info-panel">
+    <div class="token-pool">
+      <span class="pool-label">共有プール</span>
+      <span class="r">縦${pr}</span>
+      <span class="m">横${pm}</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <div style="flex:1"><div style="font-size:9px;color:var(--muted)">縦プール</div>
+        <div class="pool-bar"><div class="pool-fill" style="width:${Math.max(0,(pr/pMax*100)).toFixed(0)}%;background:var(--r)"></div></div></div>
+      <div style="flex:1"><div style="font-size:9px;color:var(--muted)">横プール</div>
+        <div class="pool-bar"><div class="pool-fill" style="width:${Math.max(0,(pm/pMax*100)).toFixed(0)}%;background:var(--m)"></div></div></div>
+    </div>
+    <div style="font-size:11px">あなたの手元：<span class="r">縦${you.tokens.r}</span> <span class="m">横${you.tokens.m}</span></div>
+  </div>`;
+}
+
+function renderRaceTrack(){
+  const pts=CONFIG.placement[state.playerCount]||[];
+  const songs=[
+    {label:"Song1 バラード",cfg:CONFIG.song1,formula:`高×${CONFIG.song1.h}+横×${CONFIG.song1.m}`},
+    {label:"Song2 アップテンポ",cfg:CONFIG.song2,formula:`縦×${CONFIG.song2.r}+横×${CONFIG.song2.m}`},
+  ];
+  return`<div class="race-wrap">`+songs.map(song=>{
+    const scores=state.bands.map(b=>({seat:b.seat,name:b.name,you:b.you,score:projSong(b,song.cfg)}))
+      .sort((a,b)=>b.score-a.score);
+    return`<div class="race-track">
+      <div class="race-label">${song.label}<span class="race-formula">${song.formula}</span></div>
+      ${scores.map((s,i)=>`<div class="race-row${s.you?" race-you":""}">
+        <span class="race-rank">${i+1}位</span>
+        <span class="race-name">${s.name}</span>
+        <span class="race-score">${s.score}</span>
+        <span class="race-pts muted">→${pts[i]??0}pt</span>
+      </div>`).join("")}
+    </div>`;
+  }).join("")+`</div>`;
+}
+
+function renderPlay(){
+  const you=state.bands[0];
+  const turnNo=state.round+1;
+  const isLast=turnNo>=CONFIG.turns;
+  const pct=Math.round(state.round/CONFIG.turns*100);
+  const yourTypes=new Set(allInsts(you));
+  const canR=state.tokenPool.r>=CONFIG.practiceGain;
+  const canM=state.tokenPool.m>=CONFIG.practiceGain;
+  const P=projPowers(you);
+
+  const market=state.market.map(mem=>{
+    const cost=CONFIG.costs[mem.instrument];
+    const afford=canAfford(you,cost);
+    const clickScout=!state.peekMode&&afford&&bSize(you)<CONFIG.bandCap;
+    const clickPeek=state.peekMode&&!mem.peeked;
+    return memCard(mem,{clickScout,cantAfford:!afford&&!state.peekMode,newType:!yourTypes.has(mem.instrument),clickPeek});
+  }).join("");
+  const canScout=state.market.some(m=>canAfford(you,CONFIG.costs[m.instrument])&&bSize(you)<CONFIG.bandCap);
+  const stuck=!canR&&!canM&&!canScout;
+
+  const opps=state.bands.slice(1).map(b=>{
+    const bp=projPowers(b);
+    return`<div class="band">
+      <div class="top">
+        <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
+        <div class="pw">${pwStr(bp)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">${b.members.map(m=>m.name+"・"+INST[m.instrument].label).join(" / ")||"なし"}</div>
+    </div>`;
+  }).join("");
+
+  return`<div class="banner ${isLast?"last":""}">
+    <div style="flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="t">${isLast?"⚠ ラスト手番！":"手番"} ${turnNo} / ${CONFIG.turns}</span>
+        <span style="font-size:11px;opacity:.7">seed ${state.seed}</span>
+      </div>
+      <div class="turn-bar"><div class="turn-fill" style="width:${pct}%"></div></div>
+    </div>
+  </div>
+
+  <div class="top-panels">${renderJudge()}${renderInfoPanel()}</div>
+  ${renderRaceTrack()}
+
+  <h2><span class="dot bg-h"></span>場のメンバー
+    <span class="muted" style="font-size:11px;font-weight:500">山札残 ${state.deck.length}枚　緑枠＝新楽器タイプ</span>
+    ${state.peekMode
+      ?`<span style="color:var(--m);font-weight:700;font-size:11px;margin-left:8px">👁 覗くメンバーをタップ</span><button data-action="cancel-peek" style="font-size:10px;padding:2px 8px;margin-left:6px">キャンセル</button>`
+      :!state.peekUsed
+        ?`<button data-action="start-peek" style="font-size:10px;padding:2px 8px;margin-left:6px">👁 覗き（残1回）</button>`
+        :`<span class="muted" style="font-size:10px;margin-left:6px">覗き使用済</span>`
+    }
+  </h2>
+  <div class="mkt">${market}</div>
+
+  <h2><span class="dot bg-r"></span>あなたのバンド</h2>
+  <div class="band you">
+    <div class="top">
+      <span><span class="nm">あなた</span> <span class="lead">${INST[you.instrument].label}・${bSize(you)}/${CONFIG.bandCap}人</span></span>
+      <div class="pw">${pwStr(P)}</div>
+    </div>
+    <div class="chips">
+      <span class="chip you">（自分:${INST[you.instrument].label}）</span>
+      ${you.members.map(m=>{
+        const c=SKILLS[m.closed];
+        return`<span class="chip you">${m.name}・${INST[m.instrument].label}・${SKILLS[m.open].n}・<b class="${c.risk?"risk":""}">${c.n}</b></span>`;
+      }).join("")||'<span class="muted" style="font-size:11px">メンバーなし</span>'}
+    </div>
+  </div>
+
+  <div class="studio-row" style="margin-top:8px;align-items:stretch;gap:8px;display:flex;flex-wrap:wrap;">
+    <button class="big" style="flex:1;min-width:160px;border-color:var(--r);${canR?"":"opacity:.4"}"
+      data-action="practice" data-axis="r" ${canR?"":"disabled"}>
+      🥁 Aスタジオで練習<br>
+      <span style="font-size:11px;font-weight:500">縦トークン +${CONFIG.practiceGain}　プール残${state.tokenPool.r}</span>
+    </button>
+    <button class="big" style="flex:1;min-width:160px;border-color:var(--m);${canM?"":"opacity:.4"}"
+      data-action="practice" data-axis="m" ${canM?"":"disabled"}>
+      🎸 Bスタジオで練習<br>
+      <span style="font-size:11px;font-weight:500">横トークン +${CONFIG.practiceGain}　プール残${state.tokenPool.m}</span>
+    </button>
+  </div>
+  ${stuck?`<button class="big" style="margin-top:8px;width:100%;opacity:.7;border-style:dashed" data-action="pass">
+    😴 休憩（プール枯渇・合法手なし）<br>
+    <span style="font-size:11px;font-weight:500">手番をパスします</span>
+  </button>`:''}
+
+
+  <h2><span class="dot bg-m"></span>対戦相手</h2>
+  ${opps}
+
+  <div class="log">${state.log.map(l=>`<div class="${l.cls||""}">${l.t}</div>`).join("")}</div>`;
+}
+
+function renderRevealModal(){
+  const r=state.scoutReveal;if(!r) return"";
+  const openSk=SKILLS[r.open];
+  const closedSk=SKILLS[r.closed];
+  return`<div class="reveal-overlay">
+    <div class="reveal-card">
+      <div class="reveal-header">スカウト成功！</div>
+      <div class="reveal-name">${r.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${r.inst}</div>
+      <div class="reveal-skills">
+        <div class="skill-row open-row">
+          <div class="skill-row-label">オープンスキル（既知）</div>
+          <div class="skill-row-name">${openSk.n}</div>
+          <div class="skill-row-desc">${openSk.d}</div>
+        </div>
+        <div class="skill-row closed-row ${closedSk.risk?"bad":"good"}">
+          <div class="skill-row-label">クローズドスキル　公開！</div>
+          <div class="skill-row-name">${closedSk.n}</div>
+          <div class="skill-row-desc">${closedSk.d}</div>
+        </div>
+      </div>
+      <button data-action="confirm-reveal" class="big" style="width:100%">確認してターンを終える</button>
+    </div>
+  </div>`;
+}
+
+function renderDetailModal(mem,band){
+  const i=INST[mem.instrument];
+  const cost=CONFIG.costs[mem.instrument];
+  const sz=bSize(band)+1;
+  const insts=[...allInsts(band),mem.instrument];
+  const hasR=insts.some(x=>x==="cajon"||x==="bass");
+  const openInfo=skillEffectInfo(mem.open,mem,sz,hasR);
+  const canScout=bSize(band)<CONFIG.bandCap&&canAfford(band,cost);
+
+  return`<div class="modal-overlay" data-action="closedetail">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="sdp-head">
+        <span class="sdp-name">${mem.name}</span>
+        <span class="sdp-inst">${i.label}</span>
+        <button class="sdp-close ghost" onclick="event.stopPropagation();state.detailCard=null;renderOverlay()">✕</button>
+      </div>
+      <div class="sdp-stats">
+        <span class="r">縦 ${i.r}</span> <span class="m">横 ${i.m}</span> <span class="h">高 ${i.h}</span>
+      </div>
+      <div class="sdp-cost">スカウトコスト：${costStr(mem.instrument)}</div>
+      <div class="sdp-section">
+        <div class="sdp-sec-label">オープンスキル</div>
+        <div class="sdp-row ${openInfo.cls}">
+          <div class="sn">${SKILLS[mem.open].n}</div>
+          <div class="sd">${SKILLS[mem.open].d}</div>
+          <span class="sa">${openInfo.txt}</span>
+        </div>
+      </div>
+      <div class="sdp-section">
+        <div class="sdp-sec-label">クローズドスキル</div>
+        <div class="sdp-row inactive">
+          <div class="sn">不明</div>
+          <div class="sd">スカウトすると公開されます</div>
+        </div>
+      </div>
+      ${canScout
+        ?`<button class="sdp-scout big" data-action="scout-from-modal" data-mid="${mem.id}">スカウトする →</button>`
+        :`<button class="sdp-scout big" disabled>スカウト不可${!canAfford(band,cost)?" (トークン不足)":""}</button>`}
+    </div>
+  </div>`;
+}
+
+function renderAudition(){
+  const r=state.results;
+  const winner=state.bands[r.winner];
+  const isYouWin=r.winner===0;
+
+  const rows=state.bands.map(b=>{
+    const s1=r.s1.find(x=>x.seat===b.seat).score;
+    const s2=r.s2.find(x=>x.seat===b.seat).score;
+    const tot=r.totals.find(x=>x.seat===b.seat);
+    return`<tr class="${b.seat===r.winner?"win":""}">
+      <td class="l">${b.name}</td>
+      <td>${s1}</td><td>${r.p1[b.seat]??0}</td>
+      <td>${s2}</td><td>${r.p2[b.seat]??0}</td>
+      <td>${tot.jb>0?"+"+tot.jb:"—"}</td>
+      <td><b>${tot.total}</b></td>
+      <td>${b.seat===r.winner?"🏆":""}</td>
+    </tr>`;
+  }).join("");
+
+  const bandDetails=state.bands.map(b=>{
+    const P=projPowers(b);
+    return`<div class="band${b.you?" you":""}">
+      <div class="top">
+        <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
+        <div class="pw">${pwStr(P)}</div>
+      </div>
+      <p style="font-size:11px;margin-top:4px;color:var(--muted)">
+        ${b.members.map(m=>`${m.name}（${INST[m.instrument].label}）表:${SKILLS[m.open].n} 隠:${SKILLS[m.closed].n}`).join("　")||"メンバーなし"}
+      </p>
+    </div>`;
+  }).join("");
+
+  return`<div class="banner" style="${isYouWin?"background:#1a5c3a":""}">
+    <div class="t">${isYouWin?"🎸 あなたの優勝！":"優勝："+winner.name}</div>
+  </div>
+  <h2>オーディション結果</h2>
+  <table>
+    <tr><th class="l">バンド</th><th>Song1</th><th>pt</th><th>Song2</th><th>pt</th><th>審査員</th><th>合計</th><th></th></tr>
+    ${rows}
+  </table>
+  <p class="note" style="margin-top:4px">
+    順位点：1位3pt・2位2pt（3位以下は減少）　審査員：${state.judgeCards.map(k=>JUDGE_CARDS[k].n+"（"+JUDGE_CARDS[k].d+"+"+CONFIG.judgeBonus[k]+"pt）").join("・")}
+  </p>
+  <h2 style="margin-top:14px">バンド詳細</h2>
+  ${bandDetails}
+  <div class="row" style="margin-top:14px">
+    <button class="big" data-action="again">もう一度</button>
+  </div>`;
+}
+
+/* ====== TOAST & ANIM ====== */
+let _toastTimer=null;
+function showToast(msg,cls=""){
+  let el=document.getElementById("_toast");
+  if(!el){el=document.createElement("div");el.id="_toast";el.className="toast";document.body.appendChild(el);}
+  clearTimeout(_toastTimer);
+  el.textContent=msg;el.className="toast "+(cls||"");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("show")));
+  _toastTimer=setTimeout(()=>el.classList.remove("show"),2200);
+}
+
+function afterRender(){
+  const la=state.lastAction;if(!la)return;state.lastAction=null;
+  if(la.type==="scout") showToast(la.name+"（"+la.inst+"）をスカウト！","t-scout");
+  if(la.type==="practice"){
+    showToast((la.axis==="r"?"Aスタジオ 縦":"Bスタジオ 横")+" +"+la.gain,"t-practice-"+la.axis);
+    const btn=document.querySelector(`button[data-action="practice"][data-axis="${la.axis}"]`);
+    if(btn&&la.gain>0){
+      const el=document.createElement("div");el.textContent="+"+la.gain;
+      el.style.cssText=`position:fixed;color:${la.axis==="r"?"#BE4A2C":"#2E7D6B"};font-weight:900;font-size:22px;pointer-events:none;z-index:9999;text-shadow:0 2px 6px rgba(0,0,0,.3)`;
+      const rect=btn.getBoundingClientRect();
+      el.style.left=(rect.left+rect.width/2-14)+"px";el.style.top=(rect.top-4)+"px";
+      document.body.appendChild(el);
+      el.animate([{opacity:1,transform:"translateY(0) scale(1)"},{opacity:0,transform:"translateY(-52px) scale(1.4)"}],
+        {duration:900,easing:"cubic-bezier(.2,0,.8,1)"}).onfinish=()=>el.remove();
+    }
+  }
+}
+
+/* ====== EVENTS ====== */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]");if(!el) return;
+  const act=el.dataset.action;
+
+  // setup
+  if(act==="count"){state.setup.count=+el.dataset.n;render();return;}
+  if(act==="godraft"){goDraft();return;}
+  // draft
+  if(act==="selectinst"){selectInstrument(el.dataset.k);return;}
+  if(act==="startgame"){startGame();return;}
+  // reset
+  if(act==="again"){
+    state={phase:"setup",rng:mulberry32(Math.random()*1e9|0),setup:state.lastSetup||{count:3}};
+    render();return;
+  }
+  // reveal
+  if(act==="confirm-reveal"){state.scoutReveal=null;endPlayerTurn();return;}
+
+  if(state.phase!=="play") return;
+
+  if(act==="start-peek"){state.peekMode=true;render();return;}
+  if(act==="cancel-peek"){state.peekMode=false;render();return;}
+  if(act==="peek-card"){
+    const mid=+el.closest("[data-mid]").dataset.mid;
+    const mem=state.market.find(m=>m.id===mid);
+    if(!mem)return;
+    mem.peeked=true;state.peekMode=false;state.peekUsed=true;
+    showToast(mem.name+" 隠スキル："+SKILLS[mem.closed].n,SKILLS[mem.closed].risk?"t-warn":"t-scout");
+    render();return;
+  }
+  if(act==="pass"){
+    log("あなたが休憩（合法手なし）","you");
+    endPlayerTurn();return;
+  }
+  if(act==="practice"){
+    doPractice(state.bands[0],el.dataset.axis);
+    endPlayerTurn();return;
+  }
+  if(act==="scout"){
+    const mid=+el.closest("[data-mid]").dataset.mid;
+    const mem=state.market.find(m=>m.id===mid);
+    const you=state.bands[0];
+    if(!mem||bSize(you)>=CONFIG.bandCap) return;
+    if(!canAfford(you,CONFIG.costs[mem.instrument])){showToast("トークンが足りません","t-warn");return;}
+    doScout(you,mem);
+    render(); // reveal モーダルを先に表示、confirm-reveal で endPlayerTurn
+    return;
+  }
+  if(act==="scout-from-modal"){
+    const mid=+el.dataset.mid;
+    const mem=state.market.find(m=>m.id===mid);
+    const you=state.bands[0];
+    if(!mem||!canAfford(you,CONFIG.costs[mem.instrument])) return;
+    state.detailCard=null;
+    doScout(you,mem);
+    render();return;
+  }
+  if(act==="opendetail"){if(state.peekMode)return;state.detailCard=+el.dataset.mid;renderOverlay();return;}
+  if(act==="closedetail"){state.detailCard=null;renderOverlay();return;}
+});
+
+newSetup();
+</script>
+</body>
+</html>
