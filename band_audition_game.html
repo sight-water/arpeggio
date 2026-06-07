@@ -239,11 +239,11 @@ const CONFIG = {
   song2: {r:2, m:1},
   placement: {2:[3,0], 3:[5,2,0], 4:[5,3,1,0], 5:[5,3,2,1,0]},
   tokenPoolBase: 20,
-  stageFrightProb: 0.7,
+  stageFrightProb: 0.5,
   stageFrightPenalty: 2,
   costs: {
     vocal:    {r:0, m:4},
-    guitar:   {r:1, m:4},
+    guitar:   {r:0, m:3},
     bass:     {r:3, m:0},
     cajon:    {r:4, m:0},
     keyboard: {r:2, m:2},
@@ -261,26 +261,42 @@ const CONFIG = {
 /* ====== DATA ====== */
 const INST = {
   vocal:    {label:"ボーカル",   r:0, m:3, h:1},
-  guitar:   {label:"ギター",     r:1, m:3, h:1},
+  guitar:   {label:"ギター",     r:0, m:3, h:1},
   bass:     {label:"ベース",     r:2, m:0, h:1},
   cajon:    {label:"カホン",     r:3, m:0, h:1},
-  keyboard: {label:"キーボード", r:0, m:0, h:3},
+  keyboard: {label:"キーボード", r:0, m:1, h:3},
 };
 const INST_KEYS = Object.keys(INST);
 
 // 山札構成 合計38枚
-const DECK_COMP = {guitar:10, vocal:9, bass:8, keyboard:7, cajon:4};
+const DECK_COMP = {guitar:13, vocal:8, bass:7, keyboard:6, cajon:4};
 
 const SKILLS = {
-  harmonizer:   {n:"ハモり上手",     d:"高さ+2",                    risk:false},
+  enjoy:        {n:"エンジョイ勢",   d:"特殊効果なし",              risk:false},
+  harmonizer:   {n:"ハモり上手",     d:"高さ+1",                    risk:false},
   big_ensemble: {n:"大編成向き",     d:"5人以上で横+3",             risk:false},
-  tight_rhythm: {n:"几帳面なリズム", d:"カホン/ベースがいれば縦+2", risk:false},
-  hidden_ace:   {n:"隠れた名手",     d:"担当軸+2",                  risk:false},
-  stoic:        {n:"ストイック",     d:"3人以下なら担当軸+4",       risk:false},
-  stage_fright: {n:"本番×",         d:"70%で縦・横−2",             risk:true},
+  precision:    {n:"精密機械",       d:"縦+1",                      risk:false},
+  veteran:      {n:"経験者",         d:"担当軸+2",                  risk:false},
+  own_world:    {n:"独自世界",       d:"全項目+2",                  risk:false},
+  stage_weak:   {n:"本番に弱い",     d:"50%で縦・横−2",             risk:true},
   misfit:       {n:"はみ出し者",     d:"4人以上なら担当軸−2",      risk:true},
+  home_living:  {n:"実家暮らし",     d:"練習トークン+1",            risk:false},
+  quit_member:  {n:"資格勉強中",     d:"スカウト無効・場から消える", risk:true},
 };
 const SKILL_KEYS = Object.keys(SKILLS);
+// 出現頻度: 最多=5, 多=3, 小=2, 最小=1
+const SKILL_POOL = [
+  ...Array(5).fill("enjoy"),
+  ...Array(3).fill("harmonizer"),
+  ...Array(3).fill("big_ensemble"),
+  ...Array(3).fill("precision"),
+  ...Array(3).fill("veteran"),
+  ...Array(3).fill("own_world"),
+  ...Array(2).fill("misfit"),
+  ...Array(2).fill("stage_weak"),
+  ...Array(1).fill("home_living"),
+  ...Array(1).fill("quit_member"),
+];
 
 const JUDGE_CARDS = {
   rhythm_lover: {n:"リズム重視",     d:"Song2 1位に"},
@@ -385,7 +401,7 @@ function startGame(){
   let id=0;
   Object.entries(DECK_COMP).forEach(([inst,count])=>{
     for(let i=0;i<count;i++){
-      const sk=[...SKILL_KEYS];shuffle(sk);
+      const sk=[...SKILL_POOL];shuffle(sk);
       ng.deck.push({id,name:NAMES[id%NAMES.length],instrument:inst,open:sk[0],closed:sk[1],peeked:false});
       id++;
     }
@@ -427,11 +443,11 @@ function openSkillDelta(b){
   const hasR=allInsts(b).some(i=>i==="cajon"||i==="bass");
   b.members.forEach(mem=>{
     switch(mem.open){
-      case"harmonizer":   P.h+=2; break;
+      case"harmonizer":   P.h+=1; break;
       case"big_ensemble": if(sz>=5) P.m+=3; break;
-      case"tight_rhythm": if(hasR) P.r+=2; break;
-      case"hidden_ace":   P[primary(mem.instrument)]+=2; break;
-      case"stoic":        if(sz<=3) P[primary(mem.instrument)]+=4; break;
+      case"precision":    P.r+=1; break;
+      case"veteran":      P[primary(mem.instrument)]+=2; break;
+      case"own_world":    P.r+=2;P.m+=2;P.h+=2; break;
     }
   });
   return P;
@@ -443,12 +459,12 @@ function closedSkillDelta(b){
   const hasR=allInsts(b).some(i=>i==="cajon"||i==="bass");
   b.members.forEach(mem=>{
     switch(mem.closed){
-      case"harmonizer":   P.h+=2; break;
+      case"harmonizer":   P.h+=1; break;
       case"big_ensemble": if(sz>=5) P.m+=3; break;
-      case"tight_rhythm": if(hasR) P.r+=2; break;
-      case"hidden_ace":   P[primary(mem.instrument)]+=2; break;
-      case"stoic":        if(sz<=3) P[primary(mem.instrument)]+=4; break;
-      case"stage_fright":
+      case"precision":    P.r+=1; break;
+      case"veteran":      P[primary(mem.instrument)]+=2; break;
+      case"own_world":    P.r+=2;P.m+=2;P.h+=2; break;
+      case"stage_weak":
         if(state.rng()<CONFIG.stageFrightProb){P.r-=CONFIG.stageFrightPenalty;P.m-=CONFIG.stageFrightPenalty;}
         break;
       case"misfit": if(sz>=4) P[primary(mem.instrument)]-=2; break;
@@ -543,18 +559,27 @@ function doScout(b,mem){
   b.tokens.r-=cost.r;b.tokens.m-=cost.m;
   state.tokenPool.r+=cost.r;state.tokenPool.m+=cost.m;
   state.market=state.market.filter(x=>x.id!==mem.id);
+  // 資格勉強中: スカウト無効・場から消える（コストは消費）
+  if(mem.closed==="quit_member"){
+    refill();
+    if(b.you){
+      state.scoutReveal={name:mem.name,inst:INST[mem.instrument].label,open:mem.open,closed:mem.closed};
+    }
+    log(b.name+"が"+mem.name+"をスカウトしようとしたが断られた（資格勉強中）",b.you?"you":"bot");
+    return;
+  }
   b.members.push(mem);
   refill();
   if(b.you){
     state.lastAction={type:"scout",memberId:mem.id,name:mem.name,inst:INST[mem.instrument].label};
-    // スカウト後クローズド公開演出
     state.scoutReveal={name:mem.name,inst:INST[mem.instrument].label,open:mem.open,closed:mem.closed};
   }
   log(b.name+"が"+mem.name+"（"+INST[mem.instrument].label+"）をスカウト",b.you?"you":"bot");
 }
 
 function doPractice(b,axis){
-  const gain=Math.min(CONFIG.practiceGain,state.tokenPool[axis]);
+  const hasHomeLiving=b.members.some(m=>m.open==="home_living"||m.closed==="home_living");
+  const gain=Math.min(CONFIG.practiceGain+(hasHomeLiving?1:0),state.tokenPool[axis]);
   if(gain<=0){log((axis==="r"?"A":"B")+"スタジオが満員（プール枯渇）","sys");return false;}
   state.tokenPool[axis]-=gain;
   b.tokens[axis]+=gain;
@@ -733,13 +758,16 @@ function skillEffectInfo(skillKey,mem,sz,hasR){
   const pri=primary(mem.instrument);
   const pn=pri==="r"?"縦":pri==="m"?"横":"高さ";
   switch(skillKey){
-    case"harmonizer":   return{cls:"good",txt:"✓ 高さ+2"};
+    case"enjoy":        return{cls:"inactive",txt:"特殊効果なし"};
+    case"harmonizer":   return{cls:"good",txt:"✓ 高さ+1"};
     case"big_ensemble": return sz>=5?{cls:"good",txt:"✓ 発動（横+3）"}:{cls:"inactive",txt:`現${sz}人・5人から発動`};
-    case"tight_rhythm": return hasR?{cls:"good",txt:"✓ 縦+2（発動）"}:{cls:"inactive",txt:"カホン/ベース必要"};
-    case"hidden_ace":   return{cls:"good",txt:`✓ ${pn}+2`};
-    case"stoic":        return sz<=3?{cls:"good",txt:`✓ ${pn}+4（発動）`}:{cls:"inactive",txt:`${sz}人・3人以下で発動`};
-    case"stage_fright": return{cls:"bad",txt:"⚠ 本番70%で縦・横−2"};
+    case"precision":    return{cls:"good",txt:"✓ 縦+1"};
+    case"veteran":      return{cls:"good",txt:`✓ ${pn}+2`};
+    case"own_world":    return{cls:"good",txt:"✓ 全項目+2"};
+    case"stage_weak":   return{cls:"bad",txt:"⚠ 本番50%で縦・横−2"};
     case"misfit":       return sz>=4?{cls:"bad",txt:`⚠ ${pn}−2（発動）`}:{cls:"inactive",txt:`4人以上で${pn}−2`};
+    case"home_living":  return{cls:"good",txt:"✓ 練習トークン+1"};
+    case"quit_member":  return{cls:"bad",txt:"⚠ スカウト無効・場から消える"};
   }
   return{cls:"inactive",txt:""};
 }
@@ -961,8 +989,10 @@ function renderPlay(){
   const isLast=turnNo>=CONFIG.turns;
   const pct=Math.round(state.round/CONFIG.turns*100);
   const yourTypes=new Set(allInsts(you));
-  const canR=state.tokenPool.r>=CONFIG.practiceGain;
-  const canM=state.tokenPool.m>=CONFIG.practiceGain;
+  const hasHomeLiving=you.members.some(m=>m.open==="home_living"||m.closed==="home_living");
+  const practiceGain=CONFIG.practiceGain+(hasHomeLiving?1:0);
+  const canR=state.tokenPool.r>0;
+  const canM=state.tokenPool.m>0;
   const P=projPowers(you);
 
   const market=state.market.map(mem=>{
@@ -1023,12 +1053,12 @@ function renderPlay(){
     <button class="big" style="flex:1;min-width:160px;border-color:var(--r);${canR?"":"opacity:.4"}"
       data-action="practice" data-axis="r" ${canR?"":"disabled"}>
       🥁 Aスタジオで練習<br>
-      <span style="font-size:11px;font-weight:500">縦トークン +${CONFIG.practiceGain}　プール残${state.tokenPool.r}</span>
+      <span style="font-size:11px;font-weight:500">縦トークン +${Math.min(practiceGain,state.tokenPool.r)}　プール残${state.tokenPool.r}</span>
     </button>
     <button class="big" style="flex:1;min-width:160px;border-color:var(--m);${canM?"":"opacity:.4"}"
       data-action="practice" data-axis="m" ${canM?"":"disabled"}>
       🎸 Bスタジオで練習<br>
-      <span style="font-size:11px;font-weight:500">横トークン +${CONFIG.practiceGain}　プール残${state.tokenPool.m}</span>
+      <span style="font-size:11px;font-weight:500">横トークン +${Math.min(practiceGain,state.tokenPool.m)}　プール残${state.tokenPool.m}</span>
     </button>
   </div>
   ${stuck?`<button class="big" style="margin-top:8px;width:100%;opacity:.7;border-style:dashed" data-action="pass">
