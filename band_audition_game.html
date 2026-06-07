@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>バンド・オーディション v2</title>
+<title>Arpeggio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -330,7 +330,8 @@ function goDraft(){
     draftInsts:{},
     botArchetypes:{},
     lastSetup:s,
-    spinPhase:"idle",spinCurrentInst:null,spinFrames:[],spinFrameIdx:0,spinResult:null,
+    spinPhase:"idle",spinCurrentDisplay:null,spinFrames:[],spinFrameIdx:0,
+    draftOrder:[],draftStep:0,humanDraftPos:-1,
   };
   const jk=[...JUDGE_KEYS]; shuffle(jk);
   state.judgeCards=[jk[0],jk[1]];
@@ -376,6 +377,7 @@ function startGame(){
     bands:[],deck:[],market:[],results:null,
     lastSetup:d.lastSetup,
     botArchetypes:d.botArchetypes,
+    draftOrder:d.draftOrder||[],
   };
   state=ng;
 
@@ -565,7 +567,8 @@ function doPractice(b,axis){
 function endPlayerTurn(){
   state.peekMode=false;
   const actions=[];
-  for(let s=state.playerCount-1;s>=1;s--){
+  const botTurnOrder=[...state.draftOrder].reverse().filter(s=>s!==0);
+  for(const s of botTurnOrder){
     const b=state.bands[s];
     const prevMC=b.members.length,prevR=b.tokens.r,prevM=b.tokens.m;
     applyBot(b);
@@ -627,12 +630,23 @@ function applyBot(b){
 /* ====== ROULETTE ====== */
 function startSpin(){
   if(state.spinPhase!=="idle") return;
-  const result=INST_KEYS[Math.floor(state.rng()*INST_KEYS.length)];
+  // ドラフト順をシャッフルで決定
+  const seats=Array.from({length:state.playerCount},(_,i)=>i);
+  for(let i=seats.length-1;i>0;i--){
+    const j=Math.floor(state.rng()*(i+1));
+    [seats[i],seats[j]]=[seats[j],seats[i]];
+  }
+  state.draftOrder=seats;
+  state.humanDraftPos=seats.indexOf(0);
+  state.draftStep=0;
+  // スロットは「あなたが何番目か」の数字を回す
+  const pos1=state.humanDraftPos+1;
+  const nums=Array.from({length:state.playerCount},(_,i)=>String(i+1));
   const fakes=[];
-  for(let i=0;i<20;i++) fakes.push(INST_KEYS[Math.floor(Math.random()*INST_KEYS.length)]);
-  fakes.push(result,result,result);
-  state.spinFrames=fakes;state.spinFrameIdx=0;state.spinResult=result;
-  state.spinPhase="spinning";state.spinCurrentInst=fakes[0];
+  for(let i=0;i<18;i++) fakes.push(nums[Math.floor(Math.random()*nums.length)]);
+  fakes.push(String(pos1),String(pos1),String(pos1));
+  state.spinFrames=fakes;state.spinFrameIdx=0;state.spinCurrentDisplay=fakes[0];
+  state.spinPhase="spinning";
   render();
   setTimeout(nextSpinFrame,60);
 }
@@ -640,12 +654,39 @@ function nextSpinFrame(){
   if(state.spinPhase!=="spinning") return;
   const idx=++state.spinFrameIdx;
   const total=state.spinFrames.length;
-  if(idx>=total){state.spinPhase="done";selectInstrument(state.spinResult);return;}
-  state.spinCurrentInst=state.spinFrames[idx];
+  if(idx>=total){
+    setTimeout(processDraftStep,700);
+    return;
+  }
+  state.spinCurrentDisplay=state.spinFrames[idx];
   render();
   const pct=idx/total;
   const delay=pct<0.45?65:pct<0.7?110:pct<0.85?190:pct<0.95?310:420;
   setTimeout(nextSpinFrame,delay);
+}
+function botPickInst(seat){
+  const taken=new Set(Object.values(state.draftInsts));
+  const avail=INST_KEYS.filter(k=>!taken.has(k));
+  if(!avail.length) return;
+  const arch=state.botArchetypes[seat];
+  let choice;
+  if(arch==="narrow") choice=avail.find(k=>k==="cajon")||avail.find(k=>k==="bass")||avail[0];
+  else if(arch==="wide") choice=avail.find(k=>k==="vocal")||avail.find(k=>k==="guitar")||avail[0];
+  else if(arch==="balanced") choice=avail.find(k=>k==="keyboard")||avail[0];
+  else choice=avail[Math.floor(state.rng()*avail.length)];
+  state.draftInsts[seat]=choice;
+}
+function processDraftStep(){
+  if(state.draftStep>=state.playerCount){
+    state.spinPhase="done";render();return;
+  }
+  const seat=state.draftOrder[state.draftStep];
+  if(seat===0){
+    state.spinPhase="waiting_human";render();
+  } else {
+    state.spinPhase="bot_picking";render();
+    setTimeout(()=>{botPickInst(seat);state.draftStep++;processDraftStep();},600);
+  }
 }
 
 /* ====== BOT BANNER ====== */
@@ -770,8 +811,8 @@ function renderOverlay(){
 function renderSetup(){
   const s=state.setup;
   const counts=[2,3,4,5].map(n=>`<button class="${s.count===n?"sel":""}" data-action="count" data-n="${n}">${n}人</button>`).join("");
-  return`<div class="kick">Band Audition v2</div>
-    <h1>バンド・<span class="a">オーディション</span></h1>
+  return`<div class="kick">Band Audition</div>
+    <h1><span class="a">Arpeggio</span></h1>
     <p class="note">練習でトークンを貯め、コストを払ってメンバーをスカウト。2曲のオーディションで競り勝つ。</p>
     <h2><span class="dot bg-r"></span>人数</h2>
     <div class="row">${counts}</div>
@@ -782,48 +823,73 @@ function renderSetup(){
 
 function renderDraft(){
   const phase=state.spinPhase||"idle";
-  const playerPicked=state.draftInsts[0]!=null;
   const archNames={wide:"大編成型",narrow:"少数精鋭型",balanced:"バランス型",random:"ランダム型"};
 
-  let rouletteSection;
+  let draftSection;
+
   if(phase==="idle"){
-    rouletteSection=`<div class="roulette-box">
+    draftSection=`<div class="roulette-box">
       <div class="roulette-slot">？</div>
-      <div class="roulette-sub">ルーレットで楽器が決まります</div>
+      <div class="roulette-sub">ルーレットでドラフト順が決まります</div>
       <button class="big" data-action="spin">🎲 ルーレットを回す！</button>
     </div>`;
+
   } else if(phase==="spinning"){
-    const cur=state.spinCurrentInst||"guitar";
-    rouletteSection=`<div class="roulette-box">
-      <div class="roulette-slot spinning">${INST[cur].label}</div>
-      <div class="roulette-sub" style="color:var(--accent)">🎲 抽選中…</div>
+    draftSection=`<div class="roulette-box">
+      <div class="roulette-slot spinning">${state.spinCurrentDisplay||"?"}</div>
+      <div class="roulette-sub" style="color:var(--accent)">🎲 あなたのドラフト順を抽選中…</div>
     </div>`;
+
   } else {
-    const myInst=state.draftInsts[0];
-    const draftRows=Array.from({length:state.playerCount},(_,i)=>{
-      const inst=state.draftInsts[i];
-      const lbl=i===0?"あなた":`相手${String.fromCharCode(64+i)}（${archNames[state.botArchetypes[i]]||""}）`;
-      return`<div class="draft-row${i===0?" you-row":""}">
-        <span class="draft-seat">${lbl}</span>
-        <span class="draft-inst picked">${inst?INST[inst].label+"　縦"+INST[inst].r+" 横"+INST[inst].m+" 高"+INST[inst].h:"？"}</span>
+    // bot_picking / waiting_human / done
+    const rows=state.draftOrder.map((seat,i)=>{
+      const isHuman=seat===0;
+      const nm=isHuman?"あなた":`相手${String.fromCharCode(64+seat)}（${archNames[state.botArchetypes[seat]]||""}）`;
+      const inst=state.draftInsts[seat];
+      const isCurrent=i===state.draftStep&&phase!=="done";
+      let statusTxt;
+      if(inst) statusTxt=INST[inst].label+"　縦"+INST[inst].r+" 横"+INST[inst].m+" 高"+INST[inst].h;
+      else if(isCurrent) statusTxt=isHuman?"← 選んでください":"選択中…";
+      else statusTxt="待機中";
+      return`<div class="draft-row${isHuman?" you-row":""}">
+        <span class="draft-seat" style="${isCurrent?"color:var(--accent);font-weight:900":""}">${i+1}. ${nm}</span>
+        <span class="draft-inst${inst?" picked":""}">${statusTxt}</span>
       </div>`;
     }).join("");
-    const turnOrder=[...Array.from({length:state.playerCount-1},(_,i)=>"相手"+String.fromCharCode(64+state.playerCount-1-i)),"あなた"];
-    rouletteSection=`<div class="roulette-box">
-      <div class="roulette-slot done">${INST[myInst].label}</div>
-      <div class="roulette-sub" style="color:var(--accent)">あなたの楽器が決まりました！</div>
-    </div>
-    <div class="draft-section">${draftRows}</div>
-    <div class="turn-order-note" style="margin-top:8px">
-      <b>手番順（早い順）：</b>
-      <div class="order-row">${turnOrder.map((n,i)=>`<span class="order-chip${n==="あなた"?" you":""}">${i+1}. ${n}</span>`).join("")}</div>
-    </div>`;
+
+    const humanPick=phase==="waiting_human"?(()=>{
+      const taken=new Set(Object.values(state.draftInsts));
+      const btns=INST_KEYS.map(k=>{
+        const ok=!taken.has(k);
+        return`<button ${ok?`data-action="human-pick" data-k="${k}"`:"disabled"}>
+          ${INST[k].label}<br>
+          <span style="font-size:10px;font-weight:500">縦${INST[k].r} 横${INST[k].m} 高${INST[k].h}</span>
+        </button>`;
+      }).join("");
+      return`<div style="margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">🎸 あなたの番！楽器を選んでください</div>
+        <div class="row">${btns}</div>
+      </div>`;
+    })():"";
+
+    const turnOrderNote=phase==="done"?(()=>{
+      const to=[...state.draftOrder].reverse();
+      return`<div class="turn-order-note" style="margin-top:8px">
+        <b>手番順（ドラフト逆順）：</b>
+        <div class="order-row">${to.map((s,i)=>{
+          const n=s===0?"あなた":"相手"+String.fromCharCode(64+s);
+          return`<span class="order-chip${s===0?" you":""}">${i+1}. ${n}</span>`;
+        }).join("")}</div>
+      </div>`;
+    })():"";
+
+    draftSection=`<div class="draft-section">${rows}</div>${humanPick}${turnOrderNote}`;
   }
 
-  const startBtn=playerPicked?`<button class="big" data-action="startgame">ゲームを始める →</button>`:"";
+  const startBtn=phase==="done"?`<button class="big" data-action="startgame">ゲームを始める →</button>`:"";
 
-  return`<div class="kick">Draft Phase</div>
-    <h1>バンド・<span class="a">オーディション</span></h1>
+  return`<div class="kick">Band Audition</div>
+    <h1><span class="a">Arpeggio</span></h1>
 
     <h2><span class="dot bg-h"></span>今回の審査員（全員に公開）</h2>
     <div class="draft-section" style="border-color:var(--h)">
@@ -833,8 +899,8 @@ function renderDraft(){
       </div>`).join("")}
     </div>
 
-    <h2 style="margin-top:14px"><span class="dot bg-r"></span>楽器ルーレット</h2>
-    ${rouletteSection}
+    <h2 style="margin-top:14px"><span class="dot bg-r"></span>ドラフト</h2>
+    ${draftSection}
     <div class="row" style="margin-top:14px">${startBtn}</div>`;
 }
 
@@ -916,7 +982,7 @@ function renderPlay(){
         <span><span class="nm">${b.name}</span> <span class="lead">${INST[b.instrument].label} ${bSize(b)}人</span></span>
         <div class="pw">${pwStr(bp)}</div>
       </div>
-      ${membChips(b,false)}
+      ${membChips(b,true)}
     </div>`;
   }).join("");
 
@@ -1132,7 +1198,12 @@ document.addEventListener("click",e=>{
   if(act==="godraft"){goDraft();return;}
   // draft
   if(act==="spin"){startSpin();return;}
-  if(act==="selectinst"){selectInstrument(el.dataset.k);return;}
+  if(act==="human-pick"){
+    state.draftInsts[0]=el.dataset.k;
+    state.draftStep++;
+    processDraftStep();
+    return;
+  }
   if(act==="startgame"){startGame();return;}
   // reset
   if(act==="again"){
