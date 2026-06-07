@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バンド・オーディション ルールシート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF8F1; --ink:#241D16; --muted:#7A6C5B; --line:#DDD3C0; --line2:#EBE3D2;
+    --rhythm:#BE4A2C;   /* 縦 リズム */
+    --melody:#2E7D6B;   /* 横 メロディ */
+    --harmony:#C2882A;  /* 高さ ハーモニー */
+    --accent:#9A2C1E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#2a2724;}
+  body{
+    font-family:"Zen Kaku Gothic New",sans-serif;
+    color:var(--ink);
+    padding:26px 14px;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #3a352f 0%, #211e1b 70%);
+    min-height:100vh;
+  }
+  .sheet{
+    width:210mm; max-width:100%; min-height:297mm;
+    margin:0 auto; background:var(--paper);
+    padding:14mm 13mm 11mm;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    position:relative;
+  }
+  .sheet::before{
+    content:""; position:absolute; inset:5mm;
+    border:1px solid var(--line); pointer-events:none;
+  }
+
+  /* ---- Header ---- */
+  header{position:relative; padding-bottom:9px; margin-bottom:11px;
+    border-bottom:2.5px solid var(--ink);}
+  .kicker{font-size:9.5px; letter-spacing:.42em; color:var(--accent);
+    font-weight:700; text-transform:uppercase;}
+  h1{font-family:"RocknRoll One",sans-serif; font-size:33px; line-height:.98;
+    color:var(--ink); margin:3px 0 5px; letter-spacing:.01em;}
+  h1 .amp{color:var(--accent);}
+  .lead{font-size:11px; color:var(--muted); max-width:148mm; line-height:1.5;}
+  .meta{position:absolute; right:0; top:2px; text-align:right;
+    font-size:10px; line-height:1.7; color:var(--ink);}
+  .meta b{font-weight:700;}
+  .meta .pill{display:inline-block; font-family:"RocknRoll One",sans-serif;
+    font-size:14px; color:var(--accent);}
+
+  /* ---- Columns ---- */
+  .cols{column-count:2; column-gap:9mm; margin-top:11px;}
+  .block{break-inside:avoid; margin-bottom:11px;}
+  h2{font-size:11.5px; font-weight:900; letter-spacing:.04em;
+    display:flex; align-items:center; gap:7px; margin-bottom:5px;}
+  h2 .no{font-family:"RocknRoll One",sans-serif; font-size:13px;
+    color:var(--paper); background:var(--ink);
+    width:18px; height:18px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+  p,li{font-size:10px; line-height:1.5;}
+  ul{list-style:none;}
+  ul.steps li{position:relative; padding-left:11px; margin-bottom:2.5px;}
+  ul.steps li::before{content:"▪"; position:absolute; left:0;
+    color:var(--accent); font-size:8px; top:1px;}
+  .k{font-weight:700;}
+  .muted{color:var(--muted);}
+
+  /* axis chips */
+  .axis{font-weight:700; padding:0 3px; border-radius:3px; font-size:9.5px;}
+  .a-r{color:var(--rhythm);} .a-m{color:var(--melody);} .a-h{color:var(--harmony);}
+
+  /* ---- Stat table ---- */
+  table{width:100%; border-collapse:collapse; margin-top:3px;}
+  th,td{font-size:9.5px; padding:3px 4px; text-align:center;
+    border-bottom:1px solid var(--line2);}
+  th{font-weight:700; border-bottom:1.5px solid var(--line);}
+  td.inst{text-align:left; font-weight:700;}
+  th.r,td.r{color:var(--rhythm);} th.m,td.m{color:var(--melody);} th.h,td.h{color:var(--harmony);}
+  td.hi{font-weight:900;}
+  td.zero{color:#C8BFAD;}
+
+  /* ---- Skill / card lists ---- */
+  .sk{margin-top:2px;}
+  .sk li{padding:2px 0; border-bottom:1px dotted var(--line2); line-height:1.4;}
+  .sk li:last-child{border-bottom:none;}
+  .sk .nm{font-weight:700;}
+  .tag{font-family:"Zen Kaku Gothic New"; font-size:8px; font-weight:700;
+    letter-spacing:.08em; padding:1px 5px; border-radius:8px; vertical-align:1px;
+    margin-bottom:3px; display:inline-block;}
+  .tag.up{background:#E7F0EC; color:var(--melody);}
+  .tag.down{background:#F6E4DF; color:var(--accent);}
+
+  .callout{background:#F3ECDC; border-left:3px solid var(--harmony);
+    padding:6px 8px; font-size:9.5px; line-height:1.5; margin-top:3px;}
+  .callout b{color:var(--accent);}
+
+  .foot{column-span:all; border-top:1px solid var(--line);
+    margin-top:2px; padding-top:6px; font-size:8.5px; color:var(--muted);
+    display:flex; justify-content:space-between; gap:10px;}
+  .legend span{margin-right:12px;}
+  .dot{display:inline-block; width:8px; height:8px; border-radius:50%;
+    vertical-align:0; margin-right:3px;}
+
+  @media print{
+    @page{size:A4; margin:0;}
+    html,body{background:#fff; padding:0;}
+    .sheet{box-shadow:none; width:auto; min-height:0; margin:0;}
+  }
+  @media (max-width:760px){
+    body{padding:12px 6px;}
+    .sheet{padding:18px 16px;}
+    .cols{column-count:1;}
+    .meta{position:static; text-align:left; margin-top:6px;}
+    h1{font-size:27px;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div class="meta">
+      <span class="pill">2–5</span> 人<br>
+      所要 <b>30–45</b> 分<br>
+      <span class="muted">仮タイトル</span>
+    </div>
+    <div class="kicker">Band Audition · Rules</div>
+    <h1>バンド・オーディション</h1>
+    <p class="lead">自分のバンドを編成し、<b>2曲のオーディション</b>で他の出場者に競り勝つ。メンバーをスカウトして広げるか、練習を重ねて磨くか――限られた手番の配分がすべてを決める。</p>
+  </header>
+
+  <div class="cols">
+
+    <!-- 1 準備 -->
+    <div class="block">
+      <h2><span class="no">1</span>準備</h2>
+      <ul class="steps">
+        <li>各自、担当楽器を1つ選ぶ（<span class="k">あなた＝リーダー兼バンドの1枠</span>）。</li>
+        <li>リーダースキルを2枚引き、1枚を選んで残す。さらにオープンスキルを1枚引いて自分に付ける。</li>
+        <li>メンバー山札をシャッフルし、場に <span class="k">「人数＋2」枚</span>を表向きに並べる。各メンバーはオープンスキルが表、クローズドスキルが裏。</li>
+        <li>各自、妨害カードを2枚引いて手札にする。</li>
+        <li><span class="axis a-r">縦</span>・<span class="axis a-m">横</span>・<span class="axis a-h">高さ</span>のパワートラックを 0 にセット。</li>
+      </ul>
+    </div>
+
+    <!-- 2 手番 -->
+    <div class="block">
+      <h2><span class="no">2</span>手番の流れ</h2>
+      <p>時計回り。<span class="k">各自 合計8手番</span>。自分の手番に <span class="k">スカウト</span>か<span class="k">練習</span>を1つ行う。加えて、手番中に妨害カードを <span class="k">1枚まで</span>使ってよい（任意・行動を消費しない）。</p>
+      <ul class="steps" style="margin-top:4px;">
+        <li><span class="k">スカウト</span>：場のメンバー1人を取り、バンドに加える（クローズドを公開）。場を補充。<span class="k">上限6人（自分含む）</span>。</li>
+        <li><span class="k">練習</span>：<span class="axis a-r">縦</span>か<span class="axis a-m">横</span>を選んで <span class="k">+2</span>。<span class="axis a-h">高さ</span>は練習では伸びない。</li>
+      </ul>
+      <div class="callout">人数を増やすほどスカウトに手番を取られ、練習が残らない。<b>大編成は縦が締まらない</b>のはこのため。</div>
+    </div>
+
+    <!-- 3 基礎値 -->
+    <div class="block">
+      <h2><span class="no">3</span>メンバーの基礎値</h2>
+      <p class="muted" style="margin-bottom:2px;">バンドにいる間、各軸に下記を加算する。</p>
+      <table>
+        <tr><th class="inst" style="text-align:left;">楽器</th><th class="r">縦</th><th class="m">横</th><th class="h">高さ</th></tr>
+        <tr><td class="inst">ボーカル</td><td class="r zero">0</td><td class="m hi">3</td><td class="h">1</td></tr>
+        <tr><td class="inst">ギター</td><td class="r">1</td><td class="m hi">3</td><td class="h zero">0</td></tr>
+        <tr><td class="inst">ベース</td><td class="r hi">2</td><td class="m zero">0</td><td class="h zero">0</td></tr>
+        <tr><td class="inst">カホン</td><td class="r hi">3</td><td class="m zero">0</td><td class="h zero">0</td></tr>
+        <tr><td class="inst">キーボード</td><td class="r zero">0</td><td class="m zero">0</td><td class="h hi">3</td></tr>
+      </table>
+      <p style="margin-top:4px;"><span class="axis a-h">高さ</span>の<span class="k">種類数ボーナス</span>：高さ ＋2 ×（バンドの楽器の種類数 −2）。<span class="muted">3種で+2／4種で+4／5種で+6。</span></p>
+    </div>
+
+    <!-- 4 オーディション -->
+    <div class="block">
+      <h2><span class="no">4</span>オーディション（8手番後）</h2>
+      <p>2曲を披露する。各軸のパワー＝<span class="muted">基礎値の合計＋練習＋ボーナス</span>。</p>
+      <ul class="steps" style="margin-top:4px;">
+        <li><span class="k">1曲目・バラード</span>＝ <span class="axis a-h">高さ</span>×2 ＋ <span class="axis a-m">横</span></li>
+        <li><span class="k">2曲目・アップテンポ</span>＝ <span class="axis a-r">縦</span>×2 ＋ <span class="axis a-m">横</span></li>
+      </ul>
+      <p style="margin-top:4px;">各曲で全バンドを順位づけし<span class="k">順位点</span>を配る<span class="muted">（例：5人なら 5/3/2/1/0、人数で調整）</span>。<span class="k">2曲の合計点が最多の人が優勝</span>。</p>
+      <p style="margin-top:3px;">同点なら <span class="k">アンコール</span>：<span class="axis a-m">横</span>の高い方が勝ち。</p>
+    </div>
+
+    <!-- 5 妨害カード -->
+    <div class="block">
+      <h2><span class="no">5</span>妨害カード</h2>
+      <p class="muted" style="margin-bottom:2px;">各自2枚。手番に1枚まで、使ったら捨てる。</p>
+      <ul class="sk">
+        <li><span class="nm">スタジオ確保</span>：指定した相手の<span class="k">次の練習</span>を +1 に弱める（通常+2）。</li>
+        <li><span class="nm">横取り宣言</span>：場のメンバー1人に予約。<span class="k">次の自分の手番まで</span>自分しかスカウトできない。</li>
+        <li><span class="nm">楽屋のぞき見</span>：場か相手バンドの<span class="k">クローズド1枚</span>を自分だけ確認。</li>
+      </ul>
+    </div>
+
+    <!-- 6 リーダースキル -->
+    <div class="block">
+      <h2><span class="no">6</span>リーダースキル <span class="muted" style="font-size:8.5px;font-weight:400;">／1人1つ</span></h2>
+      <ul class="sk">
+        <li><span class="nm">メトロノーム</span>：<span class="axis a-r">縦</span>の練習が +3（通常+2）。</li>
+        <li><span class="nm">フロントマン</span>：アンコールの横勝負で自分の<span class="axis a-m">横</span> +4。</li>
+        <li><span class="nm">ヘッドハンター</span>：ゲーム中2回、スカウト直前にそのメンバーのクローズドを覗ける。</li>
+        <li><span class="nm">ストイック</span>：本番時、バンドが3人以下なら全軸 +4。</li>
+      </ul>
+    </div>
+
+    <!-- 7 オープンスキル -->
+    <div class="block">
+      <h2><span class="no">7</span>オープンスキル <span class="muted" style="font-size:8.5px;font-weight:400;">／表向き</span></h2>
+      <ul class="sk">
+        <li><span class="nm">大編成向き</span>：バンドが5人以上なら <span class="axis a-m">横</span> +3。</li>
+        <li><span class="nm">少数精鋭</span>：バンドが3人以下なら 担当軸 +3。</li>
+        <li><span class="nm">ハモり上手</span>：<span class="axis a-h">高さ</span> +2。</li>
+        <li><span class="nm">几帳面なリズム</span>：カホンかベースがいれば <span class="axis a-r">縦</span> +2。</li>
+        <li><span class="nm">ムードメーカー</span>：アンコールの横勝負で <span class="axis a-m">横</span> +2。</li>
+        <li><span class="nm">飛び道具</span>：6種目の特殊楽器扱い。種類数 +1（<span class="axis a-h">高さ</span>が伸びる）。</li>
+      </ul>
+    </div>
+
+    <!-- 8 クローズドスキル -->
+    <div class="block">
+      <h2><span class="no">8</span>クローズドスキル <span class="muted" style="font-size:8.5px;font-weight:400;">／伏せ・スカウトで公開</span></h2>
+      <span class="tag up">あたり</span>
+      <ul class="sk">
+        <li><span class="nm">隠れた名手</span>：担当軸の基礎値 +2。</li>
+        <li><span class="nm">本番に強い</span>：各曲のバンド合計に +3。</li>
+        <li><span class="nm">天性のスター</span>：アンコールの横勝負で <span class="axis a-m">横</span> +5。</li>
+      </ul>
+      <span class="tag down" style="margin-top:5px;">リスク</span>
+      <ul class="sk">
+        <li><span class="nm">本番×</span>：各曲で70%の確率で発動、<span class="axis a-r">縦</span>・<span class="axis a-m">横</span> −2。</li>
+        <li><span class="nm">練習嫌い</span>：バンドにいる間、練習の加算 −1。</li>
+        <li><span class="nm">はみ出し者</span>：バンドが4人以上だと 担当軸 −2。</li>
+      </ul>
+    </div>
+
+    <div class="foot">
+      <span class="legend">
+        <span><span class="dot" style="background:var(--rhythm)"></span><b>縦</b> リズム＝カホン・ベース／練習で伸ばす</span>
+        <span><span class="dot" style="background:var(--melody)"></span><b>横</b> メロディ＝ボーカル・ギター</span>
+        <span><span class="dot" style="background:var(--harmony)"></span><b>高さ</b> ハーモニー＝広げて稼ぐ</span>
+      </span>
+      <span style="white-space:nowrap;">※担当軸＝その楽器が最も高い軸</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
